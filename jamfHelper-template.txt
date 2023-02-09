@@ -21,3 +21,10 @@ icon="/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/AlertStop
 
 userChoice=$("$jamfHelper" -windowType utility -heading "$heading" -description "$description" -button1 "$button1" -button2 "$button2" -defaultButton 1 -cancelButton 2 -icon "$icon")
 
+if [ $userChoice == 0 ]; then
+    # do button1 stuff
+    echo "OK was pressed!"
+elif [ $userChoice == 2 ]; then
+    # do button2 stuff
+    echo "Cancel was pressed!"
+fi
