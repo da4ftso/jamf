@@ -6,6 +6,7 @@
 jssurl=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url)
 apiuser="yourapiuser"
 apipass="yourapiuserpass"
+
 serial=$(/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice | /usr/bin/awk -F'"' '/IOPlatformSerialNumber/{print $4}')
 
 
@@ -28,21 +29,4 @@ getfailedmdmcommands () {
 getcomputer () { 
 	xmlresult=$(/usr/bin/curl --request GET \
      -sfku "$apiuser":"$apipass" "$jssurl":8443/JSSResource/computers/match/LJY4H0414FX
-}     
-
-##	jamfHelper
-
-jamfHelper="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
-
-# Header for Pop Up
-heading="This Is The Header"
-# Description for Pop Up
-description="Description text should not be more than about 30 words total."
-# Button Text
-button1="OK"
-button2="Cancel"
-# Path for Icon Displayed
-icon="/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/AlertStopIcon.icns"
-# AlertNoteIcon.icns (!), ToolbarCustomizeIcon.icns (tools), ToolbarInfo.icns (info), ToolbarAdvanced.icns (gear), Sync.icns
-
-userChoice=$("$jamfHelper" -windowType utility -heading "$heading" -description "$description" -button1 "$button1" -button2 "$button2" -defaultButton 1 -cancelButton 2 -icon "$icon")
+}
