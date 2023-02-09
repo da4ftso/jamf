@@ -3,6 +3,7 @@
 # useful
 
 apiURL=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url ) # keeps scripts portable and sanitized
+apiURL=$(echo $apiURL%?})
 
 # Monterey and later:
 
