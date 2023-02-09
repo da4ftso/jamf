@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# variables
+
+apiURL=$( /usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url )
+apiURL=$(echo ${apiURL%?})                                                                   
+
+serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')
+
+
+# the right to bear tokens
+
+# Get username and password encoded in base64 format and stored as a variable in a script:
+encodedCredentials=$(printf username_here:password_here | /usr/bin/iconv -t ISO-8859-1 | /usr/bin/base64 -i -)
+
+
+# in case you don't want to leave the API credentials out in the open, base64 both and leave here
+# encodedCredentials="********************************************"
+
+
+# Use encoded username and password to request a token with an API call and store the output as a variable in a script:
+authToken=$(/usr/bin/curl "$apiURL"/api/v1/auth/token --silent --request POST --header "Authorization: Basic ${encodedCredentials}")
+
+
+# Read the output, extract the token information and store the token information as a variable in a script:
+api_token=$(/usr/bin/plutil -extract token raw -o - - <<< "$authToken")
+
+
+# Verify that the token is valid and unexpired by making a separate API call, checking the HTTP status code and storing status code information as a variable in a script:
+api_authentication_check=$(/usr/bin/curl --write-out %{http_code} --silent --output /dev/null "$apiURL"/api/v1/auth --request GET --header "Authorization: Bearer ${api_token}")
+
+
+# Assuming token is verified to be valid, use the token information to make an API call:
+/usr/bin/curl --silent -k -H "Accept: application/xml" --header "Authorization: Bearer ${api_token}" "$apiURL"/JSSResource/computers/serialnumber/"$serial"/subset/general -T /path/to/some/XML.xml -X PUT
+
+
+
+# EXAMPLE: update device with $serial to site=2 by writing out .XML
+
+echo "<computer>                  
+<general>
+<site>
+<id>2</id>
+<name>Standard</name>
+</site>
+</general>
+</computer>" >> /private/tmp/site.xml
+
+
+# always good practice to clean up after yourself
+# rm -rf /path/to/some/XML.xml
+
+exit 0
