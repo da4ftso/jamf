@@ -1,5 +1,7 @@
 ##	jamfHelper
 
+# https://apple.lib.utah.edu/jamfhelper/
+
 jamfHelper="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
 
 # Header for Pop Up
