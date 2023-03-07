@@ -1,0 +1,30 @@
+JNUC admin survey
+
+Who we are (demos):
+ - age, length of time in general industry, length of time specialized as MDM
+ - gender, ethnicity (DEI)
+ - industry (generalized) - how is education different than F100 than healthcare etc
+
+What we use (tools):
+ - Jamf, Intune, everything else - call out by device type
+ - fleet composition - homogeneous vs mixed, legacy vs cloud
+
+How big we are (fleet):
+ - change in size over time? Did an Apple product drive a tool adoption or vv?
+ - or did you / your org stay with the first choice?
+
+How do tools impact fleet
+How do demos impact fleet
+Ergo how do demos impact tools - what is the role of your past experience in the choice of tools
+
+Change over time:
+- Did growing older / more experienced drive you into one or two tools? If so, what?
+- Did growth of your fleet drive you to specialize in one or more tools?
+- What if any tools did you use and then deprecate/replace?
+- Did you start as a specialist and add something else, or vice versa?
+
+Ask: what is biggest lack / vuln / need
+Ask: if you could rewind, what would you do differently?
+
+Takeaways: here is what these folks are doing, not what you should do (sort of same as Highland Battery Assessment)
+ - it's not about best practices, it's about trends - what is most common for solutions 
