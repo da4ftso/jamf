@@ -2,12 +2,11 @@
 
 # useful
 
-jss=$(/usr/bin/defaults read /Library/Preferences/com.jamfsoftware.jamf jss_url)
+# keep snippets and scripts sanitized
+apiURL=$( /usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url )
+apiURL=${apiURL%%/}
 
-jss=${jss%%/}
-
-apiURL=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url ) # keeps scripts portable and sanitized
-apiURL=$(echo $apiURL%?})
+serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')
 
 # Monterey and later:
 
