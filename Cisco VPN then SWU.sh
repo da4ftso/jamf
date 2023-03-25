@@ -59,8 +59,8 @@ else
 	
 	if [[ "$platform" = "i386" ]]; then
 	
-		/usr/sbin/softwareupdate --fetch-full-installer --full-installer-version "12.6.1"
-		echo "Requesting macOS Monterey 12.6.1 Installer..."
+		/usr/sbin/softwareupdate --fetch-full-installer --full-installer-version "12.6.3"
+		echo "Requesting macOS Monterey 12.6.3 Installer..."
 	fi	
 	
 fi	
