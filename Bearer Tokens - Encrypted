@@ -3,7 +3,6 @@
 # variables
 
 apiURL=$( /usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url )
-apiURL=$(echo ${apiURL%?})                                                                   
 
 serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')
 
