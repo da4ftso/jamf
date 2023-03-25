@@ -3,10 +3,9 @@
 # variables
 
 apiURL=$( /usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url )
+apiURL=${apiURL%%/} # remove trailing slash
 
 serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')
-
-apiURL=${apiURL%%/} # remove trailing slash
 
 # the right to bear tokens
 
