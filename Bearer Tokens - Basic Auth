@@ -2,13 +2,16 @@
 
 # useful
 
+jss=$(/usr/bin/defaults read /Library/Preferences/com.jamfsoftware.jamf jss_url)
+
+jss=${jss%%/}
+
 apiURL=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url ) # keeps scripts portable and sanitized
 apiURL=$(echo $apiURL%?})
 
 # Monterey and later:
 
 # curl -X POST -u username:password -s https://server.name.here/api/v1/auth/token | plutil -extract token raw –
-
 
 # Big Sur and earlier:
 
