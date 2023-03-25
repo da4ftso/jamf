@@ -10,11 +10,11 @@ serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumbe
 
 # Monterey and later:
 
-# curl -X POST -u username:password -s https://server.name.here/api/v1/auth/token | plutil -extract token raw –
+# curl -X POST -u username:password -s "$apiURL"/api/v1/auth/token | plutil -extract token raw –
 
 # Big Sur and earlier:
 
-# curl -X POST -u username:password -s https://server.name.here/api/v1/auth/token | python -c 'import sys, json; print json.load(sys.stdin)["token"]'
+# curl -X POST -u username:password -s "$apiURL"/api/v1/auth/token | python -c 'import sys, json; print json.load(sys.stdin)["token"]'
 
 # This allows the following functions to be collapsed into one command:
 # 
