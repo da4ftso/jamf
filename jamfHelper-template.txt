@@ -1,6 +1,10 @@
 ##	jamfHelper
 
+# various sources:
 # https://apple.lib.utah.edu/jamfhelper/
+# https://snelson.us/2023/01/jamf-helper/
+
+# when passing a message -description use printf instead of echo
 
 jamfHelper="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
 
