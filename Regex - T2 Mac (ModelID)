@@ -22,4 +22,4 @@ MacBookPro15,2		MacBook Pro (13-inch, 2018, Four Thunderbolt 3 ports)
 # Jamf Pro (java?)
 ^iMac(20,1)|iMacPro(1,1)|MacPro(7,1)|Macmini(8,1)|MacBookAir(?:9,1|8,[1-2])|MacBookPro(1[5-6],[1-4])
 
-https://regex101.com/r/4LlyLk/1
+https://regex101.com/r/djKBxW/1
