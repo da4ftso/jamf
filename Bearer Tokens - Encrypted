@@ -11,7 +11,8 @@ serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumbe
 
 # Get username and password encoded in base64 format and stored as a variable in a script:
 encodedCredentials=$(printf username_here:password_here | /usr/bin/iconv -t ISO-8859-1 | /usr/bin/base64 -i -)
-
+# a Jamf Pro user can be assigned custom privileges to not be able to view Scripts, so in theory hardcoding here is safer
+#  than passing a parameter - you want your jr techs to be able to view a Policy & flush logs as part of routine t/s
 
 # in case you don't want to leave the API credentials out in the open, base64 both and leave here
 # encodedCredentials="********************************************"
