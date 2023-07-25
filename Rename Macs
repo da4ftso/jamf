@@ -2,18 +2,21 @@
 
 # 1.2 changed ioreg to look for Battery and stopped using all the chained if statements
 
-# all the Mac14,x (2023 models) as of mid-May:
-#  MacBook Air (M2, 2022):						Mac14,2
-#  Mac mini (M2, 2023):								Mac14,3
-#  MacBook Pro (14", M2 Max, 2023): 	Mac14,5
-#  MacBook Pro (16", M2 Max, 2023): 	Mac14,6
-#  MacBook Pro (13", M2):							Mac14,7
-#  unknown 2023:											Mac14,8
-#  MacBook Pro (14", 2023): 					Mac14,9
-#  MacBook Pro (16", M2 Pro, 2023): 	Mac14,10
-#  Mac mini (M2 Pro, 2023):						Mac14,12
-#  unknown 2023:											Mac14,13
-#  unknown 2023:											Mac14,14
+# all the Mac14,x (2023 models) as of mid-May, adding the 2022 Studios:
+
+#  Mac Studio (M1 Max, 2022):				Mac13,1
+#  Mac Studio (M1 Ultra, 2022):				Mac13,2
+#  MacBook Air (M2, 2022):				Mac14,2
+#  Mac mini (M2, 2023):					Mac14,3
+#  MacBook Pro (14", M2 Max, 2023): 			Mac14,5
+#  MacBook Pro (16", M2 Max, 2023): 			Mac14,6
+#  MacBook Pro (13", M2):				Mac14,7
+#  Mac Pro (2023):					Mac14,8
+#  MacBook Pro (14", 2023): 				Mac14,9
+#  MacBook Pro (16", M2 Pro, 2023): 			Mac14,10
+#  Mac mini (M2 Pro, 2023):				Mac14,12
+#  Mac Studio (M2 Max, 2023):				Mac14,13
+#  Mac Studio (M2 Ultra, 2023):				Mac14,14
 #
 # to put in another way, you can't rely upon "Book" being anywhere in ioreg anymore
 # https://support.apple.com/en-us/HT201300
