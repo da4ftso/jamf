@@ -17,7 +17,8 @@
 #  Mac mini (M2 Pro, 2023):				Mac14,12
 #  Mac Studio (M2 Max, 2023):				Mac14,13
 #  Mac Studio (M2 Ultra, 2023):				Mac14,14
-#
+#  MacBook Air (15-inch, M2, 2023):			Mac14,15
+
 # to put in another way, you can't rely upon "Book" being anywhere in ioreg anymore
 # https://support.apple.com/en-us/HT201300
 
