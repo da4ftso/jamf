@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# 1.2 changed ioreg to look for Battery and stopped using all the chained if statements
-
-# all the Mac14,x (2023 models) as of mid-May, adding the 2022 Studios:
+# Since 2022, Macs no longer contain "Book," "Pro," or "i" in their ModelIDs.
 
 #  Mac Studio (M1 Max, 2022):				Mac13,1
 #  Mac Studio (M1 Ultra, 2022):				Mac13,2
