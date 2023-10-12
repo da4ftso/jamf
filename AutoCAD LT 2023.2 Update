@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set +x
+
+# variables
+
+# user=$(stat -f %Su /dev/console)
+# userHome=$(/usr/bin/dscl . -read "/Users/$user" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+
+
+# kill the installer
+
+/usr/bin/pkill "Installer"
+
+
+# silent install
+
+/usr/bin/hdiutil attach -nobrowse "/Library/Application Support/JAMF/Waiting Room/AutoCAD_LT_Mac_2023.2_Update_Combo.dmg"
+
+echo "Beginning update of AutoCAD LT 2023..."
+
+/usr/sbin/installer -pkg "/Volumes/T114.M.024.acadlt.mac.x64.comboupdate/AutoCAD_LT_Mac_2023.2_Update_Combo.pkg" -target /
+
+# let installer complete
+# installer will eject the volume for us
+
+sleep 10
+
+
+# add to current user's dock
+#   second variable to check for homedir location on non-boot volume
+
+# echo "Adding to current user's dock..."
+# /usr/local/bin/dockutil --add /Applications/Autodesk/AutoCAD\ LT\ 2023/AutoCAD\ LT\ 2023.app --replacing 'AutoCAD LT 2023' "$userHome"
+
+
+# cleanup
+
+echo "Removing installer..."
+rm -rf /Library/Application\ Support/JAMF/Waiting\ Room/Autodesk*
+
+exit 0

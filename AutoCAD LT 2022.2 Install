@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# variables
+
+user=$(stat -f %Su /dev/console)
+userHome=$(/usr/bin/dscl . -read "/Users/$user" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+
+
+# silent install
+
+echo "Beginning installation of AutoCAD LT 2022..."
+/private/tmp/Install\ Autodesk\ AutoCAD\ LT\ 2022\ for\ Mac.app/Contents/Helper/Setup.app/Contents/MacOS/Setup --silent ; 
+
+
+# let installer complete
+
+sleep 30
+
+
+# add to current user's dock
+#   second variable to check for homedir location on non-boot volume
+
+echo "Adding to current user's dock..."
+/usr/local/bin/dockutil --add /Applications/Autodesk/AutoCAD\ LT\ 2022/AutoCAD\ LT\ 2022.app --position end "$userHome"
+
+
+# cleanup
+
+echo "Removing installer..."
+rm -rf /private/tmp/Install\ Autodesk\ AutoCAD\ LT\ 2022\ for\ Mac.app
+
+exit 0

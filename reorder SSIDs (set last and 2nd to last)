@@ -1,0 +1,140 @@
+#!/bin/bash
+
+######################################################################
+#
+# FILENAME: 
+#   Set_SSID_Preferred_Network_To_Bottom.sh
+#
+# DESCRIPTION: 
+#   Move Specific SSID to the bottom of the Preferred  Wireless
+#   Network Stack.
+#
+#   It has been tested and does not de-auth the user if they are 
+#   currently on the SSID to be changed (If the SSID password remains
+#   in the keychain). 
+#
+#   This works with Network configuration mobileconfigs too.
+#
+#   This may not work with 802.1x - More testing needs to be done.
+#
+# CREDITS: 
+#   Inspired by https://www.jamf.com/jamf-nation/discussions/17858/wifi-preference-editing-script
+#
+######################################################################
+#
+# CHANGE CONTROL LOG
+#   Version 2.0 - 2019-08-27
+#       Updated by Caine Hörr
+#           * Broke script out into functions
+#           * Updated to identify number of preferred wireless networks
+#           * Updated to include a secondary SSID to move
+#           * Added logic to test if SSIDs are listed
+#
+#   Version 1.0 - 2019-05-30
+#       Written by Caine Hörr
+#           * Initial script creation
+#           * Tested against macOS 10.14.4 (Mojave)
+#
+# POSSIBLE FUTURE UPDATES
+#   * Quit System Preferences in case it's open... Just in case...
+#   * Do some error checking for older macOS versions (ie WiFi vs 
+#       AirPort)
+#   * Do some cool array stuff... count in number of existing SSIDs
+#       to determine the actual priority number...
+#
+######################################################################
+
+######################################################################
+# USER DEFINED SETTINGS
+######################################################################
+
+# SSID values to move to the bottom of the preferred wireless network stack
+# SSID Values are case sensitive
+SSID_Second_From_Bottom="$4"     # SSID to be placed second from the bottom of the preferred wireless network list
+SSID_Bottom="$6"           # SSID to be placed on the bottom of the preferred wireless network list
+
+# Set the Wireless Security Type (ie WPA, WPA2, etc.)
+WirelessSecurity_Second_From_Bottom="$5"
+WirelessSecurity_Bottom="$7"
+
+######################################################################
+# NO USER SERVICEABLE PARTS BELOW THIS LINE
+######################################################################
+
+main(){
+    Acquire_Network_Details
+    Bottom_SSID
+    Second_From_Bottom_SSID
+    List_Preferred_Wireless_Networks
+}
+
+
+Acquire_Network_Details(){
+    # Automatically determine the WiFi Interface (ie en0)
+    NetworkPort=$(/usr/sbin/networksetup -listallhardwareports | /usr/bin/grep -A 1 Wi-Fi | /usr/bin/grep Device | /usr/bin/cut -d' ' -f2)
+    echo "Network Interface: ${NetworkPort}"
+
+    number_of_preferred_wireless_networks=$(/usr/sbin/networksetup -listpreferredwirelessnetworks ${NetworkPort} | /usr/bin/sed '1d' | /usr/bin/wc -l | /usr/bin/awk '{$1=$1;print}')
+    number_of_preferred_wireless_networks=$(expr ${number_of_preferred_wireless_networks} - 1)
+    echo "Number of Preferred Wireless Networks: ${number_of_preferred_wireless_networks}"
+}
+
+Bottom_SSID(){
+    echo ""
+    # Confirm existence of SSID_Bottom
+    existence_of_SSID=$(/usr/sbin/networksetup -listpreferredwirelessnetworks en0 | /usr/bin/awk '{$1=$1;print}' | /usr/bin/grep -Fx "${SSID_Bottom}")
+    echo "SSID To Test: ${SSID_Bottom}"
+
+    if [ "${existence_of_SSID}" = "${SSID_Bottom}" ]; then
+        echo "SSID \"${SSID_Bottom}\" found on this device"
+
+        SSID="${SSID_Bottom}"
+        WirelessSecurity="${WirelessSecurity_Bottom}"
+
+        # Define the postion of the bottom preferred wireless network
+        Position=${number_of_preferred_wireless_networks}
+
+        Reorder_Preferred_Wireless_Network_Stack
+    else
+        echo "SSID \"${SSID_Bottom}\" not found on this device"
+    fi
+}
+
+Second_From_Bottom_SSID(){
+    echo ""
+    # Confirm existence of SSID_Second_From_Bottom
+    existence_of_SSID=$(/usr/sbin/networksetup -listpreferredwirelessnetworks en0 | /usr/bin/awk '{$1=$1;print}' | /usr/bin/grep -Fx "${SSID_Second_From_Bottom}")
+    echo "SSID To Test: ${SSID_Second_From_Bottom}"
+
+    if [ "${existence_of_SSID}" = "${SSID_Second_From_Bottom}" ]; then
+        echo "SSID \"${SSID_Second_From_Bottom}\" found on this device"
+
+        SSID="${SSID_Second_From_Bottom}"
+        WirelessSecurity="${WirelessSecurity_Second_From_Bottom}"
+
+        # Define the position of the second from the bottom preferred wireless network
+        Position=$(/bin/expr ${number_of_preferred_wireless_networks} - 1)
+
+        Reorder_Preferred_Wireless_Network_Stack
+    else
+        echo "SSID \"${SSID_Second_From_Bottom}\" not found on this device"
+    fi
+}
+
+Reorder_Preferred_Wireless_Network_Stack(){
+    echo ""
+    # Remove the SSID from the Preferred Network stack because you can't just move things... You must remove them... Stupid...
+    /usr/sbin/networksetup -removepreferredwirelessnetwork "${NetworkPort}" "${SSID}"
+
+    # Re-Add the SSID into the Preferred Network stack at the Priority level indicated
+    /usr/sbin/networksetup -addpreferredwirelessnetworkatindex "$NetworkPort" "${SSID}" "${Position}" "${WirelessSecurity}"
+}
+
+List_Preferred_Wireless_Networks(){
+    /usr/sbin/networksetup -listpreferredwirelessnetworks ${NetworkPort}
+}
+
+
+main
+
+exit

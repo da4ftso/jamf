@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# variables
+
+user=$(stat -f %Su /dev/console)
+userHome=$(/usr/bin/dscl . -read "/Users/$user" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+
+
+# kill the installer
+
+/usr/bin/pkill "Installer"
+
+
+# silent install
+
+echo "Mounting .DMG..."
+if [[ -e /Library/Application\ Support/JAMF/Waiting\ Room/Autodesk_AutoCAD_LT_2023_macOS.dmg ]]; then
+	echo "Installer found, mounting..."
+    /usr/bin/hdiutil attach -nobrowse /Library/Application\ Support/JAMF/Waiting\ Room/Autodesk_AutoCAD_LT_2023_macOS.dmg
+else
+	echo "Installer not found, exiting..."
+    exit 1
+fi    
+
+echo "Beginning installation of AutoCAD LT 2023..."
+/Volumes/Installer/Install\ Autodesk\ AutoCAD\ LT\ 2023\ for\ Mac.app/Contents/Helper/Setup.app/Contents/MacOS/Setup --silent ;
+
+# let installer complete
+# installer will eject the volume for us
+
+sleep 10
+
+
+# add to current user's dock
+#   second variable to check for homedir location on non-boot volume
+
+echo "Adding to current user's dock..."
+/usr/local/bin/dockutil --add /Applications/Autodesk/AutoCAD\ LT\ 2023/AutoCAD\ LT\ 2023.app --replacing 'AutoCAD LT 2023' "$userHome"
+
+
+# cleanup
+
+echo "Removing installer..."
+rm -rf /Library/Application\ Support/JAMF/Waiting\ Room/Autodesk*
+
+exit 0

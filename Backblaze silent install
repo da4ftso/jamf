@@ -1,0 +1,101 @@
+#!/bin/sh
+
+# Backblaze silent install
+#
+# as per https://help.backblaze.com/hc/en-us/articles/115002549693-Backblaze-Mass-Silent-Install
+#
+
+# get email address from user record in JSS, or from LDAP, or wrap input for Self Service
+
+# what all do we want or need to log?
+
+
+# 0 Setup
+
+# Variables set by Casper - To manually override, remove the comment for the given variable
+# targetDrive=""  # Casper will pass this parameter as "Target Drive" if left commented out
+# computerName=""  # Casper will pass this parameter as "Computer Name" if left commented out
+# userName=""  # Casper will pass this parameter as "User Name" if left commented out. Usernames
+#                  can only be passed if the script is triggered at login, logout, or by Self Service
+
+export USER=root
+export SHELL=/bin/sh
+export TERM=vt100
+export LOGNAME=root
+
+echo "echoing env…"
+env
+
+# Variables used for logging
+logFile="/private/var/log/installPKGfromDMG.log"
+
+# Variables used by this script.
+dmgName=""
+
+
+# CHECK TO SEE IF A VALUE WERE PASSED IN FOR PARAMETERS AND ASSIGN THEM
+if [ "$1" != "" ] && [ "$targetDrive" == "" ]; then
+    targetDrive="$1"
+fi
+
+if [ "$2" != "" ] && [ "$computerName" == "" ]; then
+    computerName="$2"
+fi
+
+if [ "$3" != "" ] && [ "$userName" == "" ]; then
+    userName="$3"
+fi
+
+if [ "$4" != "" ] && [ "$dmgName" == "" ]; then
+    dmgName="$4"
+fi
+
+if [ "$5" != "" ] && [ "$emailAddr" == "" ]; then
+    emailAddr="$5"
+fi
+
+log () {
+    echo $1
+    echo $(date "+%Y-%m-%d %H:%M:%S: ") $1 >> $logFile  
+}
+
+verifyVariable () {
+eval variableValue=\$$1
+if [ "$variableValue" != "" ]; then
+    echo "Variable \"$1\" value is set to: $variableValue"
+else
+    echo "Variable \"$1\" is blank.  Please assign a value to the variable."
+    exit 1
+fi
+}
+
+
+# Verify Variables
+verifyVariable dmgName
+
+# 1 verify the .dmg is present, install if not
+# trigger or ID should be a parameter passed
+
+# if [ !-s /Library/Application\ Support/JAMF/Waiting\ Room/$dmgName ]; then
+#	/usr/local/bin/jamf policy -trigger backblaze
+# fi
+
+
+# 2 mount dmg
+
+log "Mounting the DMG $dmgName..."
+mountResult=`/usr/bin/hdiutil mount -private -noautoopen -noverify /Library/Application\ Support/JAMF/Waiting\ Room/$dmgName -shadow`
+mountVolume=`echo "$mountResult" | grep Volumes | awk '{print $3}'`
+mountDevice=`echo "$mountResult" | grep disk | head -1 | awk '{print $1}'`
+
+if [ $? == 0 ]; then
+    log " DMG mounted successfully as volume $mountVolume on device $mountDevice."
+else
+    log "There was an error mounting the DMG. Exit Code: $?"
+fi
+
+# 3 run installer
+
+/Volumes/Backblaze\ Installer/Backblaze\ Installer.app/Contents/MacOS/bzinstall_mate -nogui -createaccount $5 "" $6 $7
+
+# 4 eject installer

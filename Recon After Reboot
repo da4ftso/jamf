@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Script which installs a LaunchDaemon which runs a Jamf inventory update at startup time.
+#
+# The LaunchDaemon takes the following actions:
+#
+# * Verifies that the Mac can communicate with the Jamf Pro server.
+# * Sends an updated inventory to the Jamf Pro server
+#
+# Create the jamf_inventory_update_at_boot LaunchDaemon by using cat input redirection
+# to write the XML contained below to a new file.
+#
+# The LaunchDaemon will run when when loaded and also when the Mac boots up.
+
+# Set the identifier for the LaunchDaemon
+
+LaunchDaemonName="com.github.runjamfproinventoryupdate"
+ 
+# Set exit code
+
+ERROR=0
+
+# Create temp directory to store LaunchDaemon file inside at file creation time.
+ 
+temp_directory=$(mktemp -d)
+
+# Create the LaunchDaemon file
+
+/bin/cat > "$temp_directory/$LaunchDaemonName.plist" << JAMF_PRO_INVENTORY_UPDATE_LAUNCHDAEMON
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>$LaunchDaemonName</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>sh</string>
+		<string>-c</string>
+		<string>/usr/local/jamf/bin/jamf checkJSSConnection -retry 30 && /usr/local/jamf/bin/jamf recon</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
+JAMF_PRO_INVENTORY_UPDATE_LAUNCHDAEMON
+ 
+# Once the LaunchDaemon file has been created, fix the permissions
+# so that the file is owned by root:wheel and set to not be executable
+# After the permissions have been updated, move the LaunchDaemon into 
+# place in /Library/LaunchDaemons.
+ 
+/usr/sbin/chown root:wheel "${temp_directory}/${LaunchDaemonName}.plist"
+/bin/chmod 644 "${temp_directory}/${LaunchDaemonName}.plist"
+/bin/chmod a-x "${temp_directory}/${LaunchDaemonName}.plist"
+/bin/mv "${temp_directory}/${LaunchDaemonName}.plist" "/Library/LaunchDaemons/${LaunchDaemonName}.plist"
+ 
+# After the LaunchDaemon is place with proper permissions, load the LaunchDaemon.
+# Loading the launchdaemon will trigger an Jamf Pro inventory update to be run.
+
+if [[ -f "/Library/LaunchDaemons/${LaunchDaemonName}.plist" ]]; then 
+   /bin/launchctl bootstrap system "/Library/LaunchDaemons/${LaunchDaemonName}.plist" 
+fi
+
+# Remove temp directory
+
+/bin/rm -rf "$temp_directory"
+
+if [[ -f "/Library/LaunchDaemons/${LaunchDaemonName}.plist" ]]; then
+
+   LaunchDaemonLoaded=$(/bin/launchctl list | grep -o "$LaunchDaemonName")
+
+   if [[ -n "$LaunchDaemonLoaded" ]]; then
+      echo "$LaunchDaemonName LaunchDaemon is loaded. Jamf Pro inventory updates will run when the Mac boots."
+   else
+      echo "ERROR: $LaunchDaemonName LaunchDaemon is not loaded."
+      ERROR=1
+   fi
+else
+   echo "ERROR: $LaunchDaemonName.plist LaunchDaemon file was not created successfully."
+   ERROR=1
+fi
+
+exit "$ERROR"

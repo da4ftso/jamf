@@ -1,0 +1,62 @@
+#!/bin/sh
+
+
+# In order to efficiently standardize all existing AD-bound Macs' computer records, this script will:
+# 
+# 1. un-bind from the existing/inherited AD (Computer Management > Directory Bindings) after validating parameters
+# 2. use the jamf binary to reset the computer's name(s) to serial;
+# 3. recon to show 'No AD' to include the computer into a Smart Group, which will then get the (new) AD configuration profile based on scope.
+
+
+# 1. check for parameters, pass to dsconfigad, unbind
+#    best practice is to NEVER hard-code a password in a script
+#    the AD account being used must have rights to unbind/rebind, obviously
+
+username="macktez"
+password=""
+
+# CHECK TO SEE IF A VALUE WAS PASSED IN PARAMETER 4 AND, IF SO, ASSIGN TO "username"
+if [ "$4" != "" ] && [ "$username" == "" ]; then
+    username=$4
+fi
+
+# CHECK TO SEE IF A VALUE WAS PASSED IN PARAMETER 5 AND, IF SO, ASSIGN TO "password"
+if [ "$5" != "" ] && [ "$password" == "" ]; then
+    password=$5
+fi
+
+# VALIDATE PARAMETERS
+
+if [ "$username" == "" ]; then
+	echo "Error:  No username is specified.  Please specify a network username."
+	exit 1
+fi
+
+if [ "$password" == "" ]; then
+	echo "Error:  No password is specified.  Please specify a network password."
+	exit 1
+fi
+
+#    unbind from AD without using the force option
+#    where does dsconfigad log to by default?  what else can we include here that might be informative?
+
+/usr/sbin/dsconfigad -r -u $4 -p $5
+
+/bin/sleep 5
+
+
+# 2. set name to serial
+#    jamf does this for us
+
+/usr/local/bin/jamf setComputerName -useSerialNumber
+
+/bin/sleep 5
+
+
+
+# 3. could be done in the policy instead, but having it here prevents the overall process from failing cause someone if recon isn't enabled
+#    the workflow being that this then triggers installation of the 'new' AD configuration profile
+
+/usr/local/bin/jamf recon
+
+exit 0

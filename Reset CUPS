@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Collect existing printers
+    existingprinters=($(/usr/bin/lpstat -p | awk '{print $2}' > /tmp/existingprinters.txt))
+
+# Delete existing printers
+    IFS=$'\n'
+        declare -a existingprinters=($(/usr/bin/lpstat -p | awk '{print $2}'))
+    unset IFS
+
+    for i in "${existingprinters[@]}"
+    do
+        echo Deleting $i
+        /usr/sbin/lpadmin -x $i
+    done
+
+# Remove existing print drivers
+#   rm -rf /Library/Printers/*
+#   sleep 15
+
+# Install print drivers
+#    /usr/local/bin/jamf policy -trigger print_driver
+    
+exit 0    
+
+exit 0
+

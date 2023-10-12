@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# 1.2 230902
+
+SSID=$4      # network
+Security=$5  # OPEN, WPA, WPAE, WPA2, WPA2E, 8021XWEP
+Index=$6     # 0 for highest
+Password=$7  # double-quote
+
+wifi=$(networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}')
+
+if [[ "$SSID" = '' || "$Security" = '' || "$Password" = '' ]]; then
+	echo 'Missing parameter, exiting...'
+        exit 1
+fi
+
+if [[ "$Index" = '' ]]; then
+        $Index="0"
+fi
+
+echo $(networksetup -getairportnetwork $wifi)
+
+# networksetup -removepreferredwirelessnetwork <device name> <network>
+
+/usr/sbin/networksetup -removepreferredwirelessnetwork $wifi "$SSID"
+
+# networksetup -addpreferredwirelessnetworkatindex <device name> <network> <index> <security type> [password]
+
+/usr/sbin/networksetup -addpreferredwirelessnetworkatindex $wifi "$SSID" $Index "$Security" "$Password"
+
+sleep 5
+
+/usr/sbin/networksetup -setairportnetwork $wifi "$SSID" "$Password"
+
+sleep 5
+
+echo $(networksetup -getairportnetwork $wifi)
+
+/usr/local/bin/jamf log
+
+exit 0

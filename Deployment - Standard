@@ -1,0 +1,59 @@
+#!/bin/zsh -e -u -o PIPE_FAIL
+
+# 1.0 deployment - standard
+
+# logging
+startTime=$( /bin/date '+%s' ) # epoch time
+
+# variables?
+# probably only for dock? if 'macktez' call a different admin dock policy?
+
+# policies
+
+# Office 365
+/usr/local/bin/jamf policy -event Install_MSOffice365 # ✅
+
+# Google Chrome
+/usr/local/bin/jamf policy -event Install_Chrome # ✅
+
+# Google Drive
+/usr/local/bin/jamf policy -event install-drive # ✅
+
+# ACC
+/usr/local/bin/jamf policy -event install-acc # ✅
+
+# Adobe RUM
+/usr/local/bin/jamf policy -event install-rum # ✅
+
+# Adobe Reader DC
+/usr/local/bin/jamf policy -event Install_AdobeAcrobatReaderDCUpdates # ✅
+
+# Zoom
+# /usr/local/bin/jamf policy -event install-zoom # ✅
+
+# policies (utilities)
+
+# dockutil
+/usr/local/bin/jamf policy -event install-dockutil # ✅
+
+# SilentKnight
+/usr/local/bin/jamf policy -event install-silnite # ✅
+
+# outset?
+
+#    [CAC only: if Group == CAC, then...]
+# fonts
+# Xerox driver (Xerox options / configuration?)
+# CAC branding
+# MC branding
+# script to apply user account images?
+
+
+# end logging
+
+stopTime=$( /bin/date '+%s' )
+seconds=$(( $stopTime-$startTime ))
+formattedTime=$( /bin/date -j -f "%s" "$seconds" '+%M minutes and %S seconds' )
+echo "Elapsed time: $formattedTime"
+
+exit 0

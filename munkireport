@@ -1,0 +1,14 @@
+#!/bin/sh
+# Run the munkireport runner every hour
+
+logfile=/Library/MunkiReport/Logs/MunkiReport.log
+triggerfile=/Users/Shared/.com.github.munkireport.run
+
+# Make sure the log file exists
+test -e $logfile || touch $triggerfile
+test -e $logfile || touch $logfile
+
+# If the log file is older than 60 minutes, run munkireport
+if test "`find $logfile -mmin +60`"; then
+  touch $triggerfile
+fi

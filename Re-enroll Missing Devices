@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# The purpose of this script is to send a repair command (Redeploy Jamf Management Framework) via MDM to a smart group of devices 
+# that have not checked in after a certain amount of time. 
+
+########### COPYRIGHT AND DISCLAIMER #############################################################################
+# Copyright notice - © 2022, Erin Mcdonald, JAMF Software, LLC
+# THE SOFTWARE IS PROVIDED "AS-IS," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
+# TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL 
+# JAMF SOFTWARE, LLC OR ANY OF ITS AFFILIATES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN 
+# CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF OR OTHER 
+# DEALINGS IN THE SOFTWARE, INCLUDING BUT NOT LIMITED TO DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL 
+# OR PUNITIVE DAMAGES AND OTHER DAMAGES SUCH AS LOSS OF USE, PROFITS, SAVINGS, TIME OR DATA, BUSINESS INTERRUPTION, 
+# OR PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES.
+##################################################################################################################
+
+# Variables
+# Replace with your environment's values
+# Jamf Pro URL including 'https://' and port, if needed
+# URL="https://myURL.jamfcloud.com"
+URL=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url)
+
+# Jamf Pro User account with the following permissions
+# Jamf Pro Server Objects: Computers, Smart Computer Groups (Read Only), Jamf Pro Server Settings: Check-In, Computer Check-In (Read Only) 
+# Jamf Pro Server Actions: Sent remote Command to Install Package
+username="apiuser" 
+
+# Password of the Jamf Pro User account
+password="cfk.afx4VBR7gqh2tut" 
+
+# Smart Group of computers that have not checked in for X amount of days, replace the # after the = with the ID of the smart group
+smartGroup=3
+
+# Get a bearer token for all API calls
+
+encodedCredentials=$( printf "$username:$password" | /usr/bin/iconv -t ISO-8859-1 | /usr/bin/base64 -i - )
+
+bearerToken=$( /usr/bin/curl "$URL/uapi/auth/tokens" \
+--silent \
+--request POST \
+--header "Authorization: Basic $encodedCredentials" )
+
+
+# parse authToken for token, omit expiration
+token=$( /usr/bin/awk -F \" '{ print $4 }' <<< "$bearerToken" | /usr/bin/xargs )
+
+# Execute the mdm command
+
+# Get membership details of Computer Group that contains computers that have not checked in in a set amount of days
+ids+=($(curl --request GET \
+--url ${URL}/JSSResource/computergroups/id/$smartGroup \
+--header 'Accept: application/xml' \
+--header "Authorization: Bearer ${token}"| xmllint --xpath '//computer_group/computers/computer/id' - 2> /dev/null | sed s/'<id>'//g | sed s/'<\/id>'/','/g | sed 's/.$//' | sort -n | tr ',' ' '))
+
+# for loop to go through all IDs in the group and send the remote command to redeplopy the framework
+
+for id in "${ids[@]}"; do
+	if [[ $id -gt 0 ]]; then
+		echo "$id"
+		# Post Redeploy command to computer
+		curl --request POST \
+		--url ${URL}/api/v1/jamf-management-framework/redeploy/${id} \
+		--header 'Content-Type: application/json' \
+		--header "Authorization: Bearer ${token}"
+	else
+		echo "Device id ${id} invalid, skipping..."
+	fi
+done
+
+# Invalidate the token
+curl --request POST \
+--url ${URL}/api/v1/auth/invalidate-token \
+--header 'Accept: application/json' \
+--header "Authorization: Bearer ${token}"
+
+exit 0

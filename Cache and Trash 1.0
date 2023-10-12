@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Cache & Trash
+# 1.0 20221018 PWC
+
+# calls du to get folder sizes, calls tmutil to check for Time Machine
+
+
+# caches
+
+/usr/bin/du -c -d -1 -h /Library/Caches/ 2>/dev/null | grep "[0-9]G\s"
+
+/usr/bin/du -c -d -1 -h /Users/"$3"/Library/Caches/ 2>/dev/null | grep "[0-9]G\s"
+
+
+# Adobe caches
+
+if [[ -e /Users/"$3"/Library/Application\ Support/Adobe/Common ]]; then
+
+	/usr/bin/du -c -d -1 -h /Users/"$3"/Library/Application\ Support/Adobe/Common | grep "[0-9]G\s"
+    
+fi
+
+
+# current user's Trash
+
+/usr/bin/du -c -d -1 -h /Users/"$3"/.Trash 2>/dev/null
+
+
+# mobile backups
+
+
+# Time Machine snapshots
+
+/usr/bin/tmutil listlocalsnapshotdates
+
+
+exit 0

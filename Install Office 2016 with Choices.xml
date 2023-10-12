@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# modified version since we're not going to re-package Office 2016 for each new version:
+#  - caching and not doing anything fancy
+#  - repackaging each new versions
+#  - modular approach (this script plus policy 90)
+#
+# parameter 4 = the name of the Office .PKG
+# parameter 5 = the name of the Autoupdate .PKG
+# parameter 6 = the name of the Volume Serializer .PKG
+#
+# remember to change these in the policy > Script > Options when you also change the Package
+#
+# things to do:
+#  - add logic to check for existence of pkg in each step and bail if not present
+#  - remove serializer and MAU into separate scripts?
+#
+# other ideas:
+#  - break out into separate policies, call each from one master script/policy; better error checking
+#
+# first version deployed at MKB, Sept 2019, v1.0 PWC
+# v1.1 PWC
+
+
+# the actual Office install with choices applied
+
+/usr/sbin/installer -pkg /Library/Application\ Support/JAMF/Waiting\ Room/$4 -target / -applyChoiceChangesXML /Users/Shared/.choices/choices.plist
+
+# sleep a bit to let installer close gracefully
+sleep 5
+
+# latest Autoupdate
+
+/usr/sbin/installer -pkg /Library/Application\ Support/JAMF/Waiting\ Room/$5 -target /
+
+# another short sleep
+sleep 5
+
+# apply the Serializer (this probably won't change)
+# ought to have a check for value, hardcode otherwise?
+
+/usr/sbin/installer -pkg /Library/Application\ Support/JAMF/Waiting\ Room/$6 -target /
+
+exit 0
+

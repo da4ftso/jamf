@@ -1,0 +1,19 @@
+#!/bin/bash
+
+wifi=$(networksetup -listallhardwareports | awk '/Hardware Port: Wi-Fi/,/Ethernet/' | awk 'NR==2' | cut -d " " -f 2)
+ssid=$(networksetup -getairportnetwork "$wifi" | awk -F': ' '{ print $2 }')
+
+# otherwise, hardcode with | to separate multiple entires; test with quotes
+
+case $ssid in
+    "$4")
+        echo "Removing $ssid from Preferred Wireless list" >> /var/log/jamf.log
+        echo "Turning off $wifi" >> /var/log/jamf.log
+        networksetup -setairportpower "$wifi" off
+        echo "wifi is equal to $wifi" >> /var/log/jamf.log
+        networksetup -removepreferredwirelessnetwork "$wifi" "$ssid"
+        echo "Turning $wifi back on" >> /var/log/jamf.log
+        sleep 1
+        networksetup -setairportpower "$wifi" on
+        ;;
+esac

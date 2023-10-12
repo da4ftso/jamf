@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# original https://raw.githubusercontent.com/aysiu/Mac-Scripts-and-Profiles/master/DockutilAddRemoveArrays.sh
+# bash string manipulations here https://www.tldp.org/LDP/LG/issue18/bash.html
+
+# check for dockutil, call a policy  with custom trigger "dockutil" to install if not already present
+
+if [ ! -f "/usr/local/bin/dockutil" ]; then
+    echo "Installing dockutil..";
+    /usr/local/bin/jamf policy -trigger dockutil;
+    sleep 5;
+else
+    echo "dockutil found at /usr/local/bin/, proceeding.."
+fi
+
+
+# current user
+ConsoleUser="$( echo "show State:/Users/ConsoleUser" | scutil | awk '/Name :/ && ! /loginwindow/ { print $3 }' )"
+
+# uid
+uid=$(id -u "$ConsoleUser")
+
+runAsUser() {  
+  if [ "$ConsoleUser" != "loginwindow" ]; then
+    launchctl asuser "$uid" sudo -u "$ConsoleUser" "$@"
+  else
+    echo "no user logged in"
+    # uncomment the exit command
+    # to make the function exit with an error when no user is logged in
+    # exit 1
+  fi
+} 
+
+
+itemsToRemove=(
+	"Sonos S1 Controller"
+)
+
+for removalItem in "${itemsToRemove[@]}"
+   do
+      # Check that the item is actually in the Dock
+      inDock=$(/usr/local/bin/dockutil --list | /usr/bin/grep "$removalItem")
+      if [ -n "$inDock" ]; then
+         runAsUser /usr/local/bin/dockutil --remove "$removalItem" /Users/$3 --no-restart
+      fi
+   done
+
+
+sudo -u $ConsoleUser /usr/local/bin/dockutil --add "/Applications/Sonos.app" /Users/$3
+
