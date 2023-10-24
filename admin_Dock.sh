@@ -6,16 +6,14 @@
 # check for dockutil, install via policy if not present
 
 if [ ! -f "/usr/local/bin/dockutil" ]; then
-    echo "Installing dockutil..";
-    /usr/local/bin/jamf policy -trigger dockutil;
-    sleep 5;
-else
-    echo "dockutil found at /usr/local/bin/, proceeding.."
+    echo "Installing dockutil.."
+    /usr/local/bin/jamf policy -trigger dockutil
+    sleep 5
 fi
 
 # CHECK TO SEE IF A VALUE WAS PASSED IN PARAMETER 4 AND, IF SO, ASSIGN TO "user"
 if [ "$4" != "" ] ; then
-    user=$4
+	dpockutiluser=$4
 elif
 	user=$3
 fi
