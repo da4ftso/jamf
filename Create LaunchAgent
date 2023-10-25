@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# variables
+
+currentUser=$(stat -f%Su /dev/console)
+uid=$(id -u "$currentUser")
+
+# WIP: parse parameters 4-5 for:
+#  name of the job: .plist
+#  type of the job: LaunchAgent, LaunchDaemon, etc
+# set plistPath based on (validated) input
+#
+# plistPath="$4"
+# plistName="$5"
+# 
+# change the launchctl check to know the path and name
+# OR, do we just keep two separate scripts and avoid pilot error?
+
+plistPath="/Library/LaunchAgents/org.domain.app.keepalive.plist"
+
+cat << EOF > "$plistPath"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.microsoft.onedrive.keepalive</string>
+	<key>Program</key>
+	<string>/Applications/OneDrive.app/Contents/MacOS/OneDrive</string>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
+EOF
+
+chmod 644 "$plistPath"
+chown "$currentUser":staff "$plistPath"
+
+/bin/launchctl bootstrap gui/"$uid" "$plistPath"/"$plistName"
+
+# run in userspace to verify LaunchAgents
+
+sleep 1 # disable on newer systems?
+
+if /bin/launchctl asuser "$uid" sudo -iu "$currentUser" /bin/launchctl list | grep -q "$plistName" ; then # https://www.shellcheck.net/wiki/SC2143
+ 	echo "KeepAlive job successfully loaded."
+else
+ 	echo "KeepAlive job failed to load."
+fi
+
+# run as root (Jamf default) to check on LaunchDaemons
+
+if /bin/launchctl list | grep -q "$plistName" ; then # https://www.shellcheck.net/wiki/SC2143
+	echo "KeepAlive job successfully loaded."
+else
+	echo "KeepAlive job failed to load."
+fi
