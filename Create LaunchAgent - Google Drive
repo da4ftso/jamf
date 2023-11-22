@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# TODO: check if existing launchagent job
+
+# variables
+
+currentUser=$(stat -f%Su /dev/console)
+uid=$(id -u "$currentUser")
+
+plistPath="/Library/LaunchAgents/com.google.drive.keepalive.plist"
+
+if [[ -e $plistPath ]]; then
+	echo "Removing old plist.."
+    rm $plistPath
+fi    
+
+# functions
+
+runAsUser() {  
+  if [ "$currentUser" != "loginwindow" ]; then
+    launchctl asuser "$uid" sudo -u "$currentUser" "$@"
+  else
+    echo "no user logged in"
+    # uncomment the exit command
+    # to make the function exit with an error when no user is logged in
+    # exit 1
+  fi
+}
+
+cat << EOF > "$plistPath"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.google.drive.keepalive</string>
+	<key>Program</key>
+	<string>/Applications/Google Drive.app/Contents/MacOS/Google Drive</string>
+</dict>
+</plist>
+EOF
+
+chmod 644 "$plistPath"
+chown "$currentUser":staff "$plistPath"
+
+runAsUser /bin/launchctl bootstrap gui/"${uid}" "${plistPath}"
+echo "launchctl job loaded.."
