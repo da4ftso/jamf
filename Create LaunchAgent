@@ -22,7 +22,7 @@ currentUser=$(stat -f%Su /dev/console)
 uid=$(id -u "$currentUser")
 
 
-plistPath="/Library/LaunchAgents/com/microsoft.onedrive.keepalive.plist"
+plistPath="/Library/LaunchAgents/com.microsoft.onedrive.keepalive.plist"
 
 cat << EOF > "$plistPath"
 <?xml version="1.0" encoding="UTF-8"?>
