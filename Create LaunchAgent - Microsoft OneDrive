@@ -8,24 +8,28 @@
 #   write out status whether OD has been configured (presence of .dat)
 #   come back later and re-run the launchctl load once that's present
 #
-# OneDrive MUST quit and re-open after loading this launchd job, otherwise
+# OneDrive .app / .appex MUST quit before loading this launchd job, otherwise
 # users will report windows cycling badly enough to be quote 'unusable'
 
 
 # variables
 
-currentUser=$(stat -f%Su /dev/console)
-uid=$(id -u "$currentUser")
+# currentUser=$(stat -f%Su /dev/console)
+# uid=$(id -u "$currentUser")
 
 # functions
 
 GetLoggedInUser() {
-	LOGGEDIN=$(/bin/echo "show State:/Users/ConsoleUser" | /usr/sbin/scutil | /usr/bin/awk '/Name :/&&!/loginwindow/{print $3}')
-	if [ "$LOGGEDIN" = "" ]; then
+	currentUser=$(/bin/echo "show State:/Users/ConsoleUser" | /usr/sbin/scutil | /usr/bin/awk '/Name :/&&!/loginwindow/{print $3}')
+	if [ "$currentUser" = "" ]; then
 		echo "$USER"
 	else
-		echo "$LOGGEDIN"
+		echo "$currentUser"
 	fi
+}
+
+GetLoggedInUID() {
+	currentUserUID=$(/usr/bin/id -u "$currentUser")
 }
 
 SetHomeFolder() {
@@ -83,15 +87,15 @@ done
 
 # set permissions
 chmod 644 "$plistPath"
-chown "$currentUser":staff "$plistPath"
+chown "$LoggedInUser":staff "$plistPath"
 
 # load the LaunchAgent as current user
-/bin/launchctl bootstrap gui/"$uid" "$plistPath"
+/bin/launchctl bootstrap gui/"$currentUserUID" "$plistPath"
 
 # run in userspace to report accurately
 sleep 1
 
-if /bin/launchctl asuser "$uid" sudo -iu "$currentUser" /bin/launchctl list | grep -q com.microsoft.onedrive.keepalive ; then # https://www.shellcheck.net/wiki/SC2143
+if /bin/launchctl asuser "$currentUserUID" sudo -iu "$LoggedInUser" /bin/launchctl list | grep -q com.microsoft.onedrive.keepalive ; then # https://www.shellcheck.net/wiki/SC2143
  	echo "KeepAlive job successfully loaded."
 else
  	echo "KeepAlive job failed to load."
