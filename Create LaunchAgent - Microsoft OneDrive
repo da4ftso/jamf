@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# shamelessly stole pbowden's EA to check for existence of the .dat
+# to check whether OneDrive has been configured, exit if not -
+# otherwise this will bring up the OneDrive login window every 5-10sec
+
 # WIP: parse parameters 4-5 for:
 #  name of the job: .plist
 #  type of the job: LaunchAgent, LaunchDaemon, etc
@@ -10,20 +14,57 @@
 # 
 # change the launchctl check to know the path and name
 # OR, do we just keep two separate scripts and avoid pilot error?
+#
+# OneDrive MUST quit and re-open after loading this launchd job, otherwise
+# users will report windows cycling badly enough to be quote 'unusable'
 
-# version below is to add a KeepAlive job for OneDrive
-# you MUST quit and re-open OneDrive after loading this launchd job
-# otherwise users will report windows cycling badly enough to be quote 'unusable'
-# which must be something about the current version of OD's Finder extension?
 
 # variables
 
 currentUser=$(stat -f%Su /dev/console)
 uid=$(id -u "$currentUser")
 
+# functions
 
+GetLoggedInUser() {
+	LOGGEDIN=$(/bin/echo "show State:/Users/ConsoleUser" | /usr/sbin/scutil | /usr/bin/awk '/Name :/&&!/loginwindow/{print $3}')
+	if [ "$LOGGEDIN" = "" ]; then
+		echo "$USER"
+	else
+		echo "$LOGGEDIN"
+	fi
+}
+
+SetHomeFolder() {
+	HOME=$(dscl . read /Users/"$1" NFSHomeDirectory | cut -d ':' -f2 | cut -d ' ' -f2)
+	if [ "$HOME" = "" ]; then
+		if [ -d "/Users/$1" ]; then
+			HOME="/Users/$1"
+		else
+			HOME=$(eval echo "~$1")
+		fi
+	fi
+}
+
+# Main
+LoggedInUser=$(GetLoggedInUser)
+SetHomeFolder "$LoggedInUser"
+
+# Find last modified time of sync file
+DataFile=$(ls -t "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/*dat | head -n 1)
+if [ "$DataFile" != "" ]; then
+	EpochTime=$(stat -f %m "$DataFile")
+	UTCDate=$(date -u -r "$EpochTime" '+%m/%d/%Y')
+	echo "<result>$UTCDate</result>"
+else
+	echo "<result>OneDrive not configured, so no LaunchAgent to load..</result>"
+	exit 0
+fi
+
+# define the plist name in LaunchAgents
 plistPath="/Library/LaunchAgents/com.microsoft.onedrive.keepalive.plist"
 
+# the plist with the KeepAlive key
 cat << EOF > "$plistPath"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -41,25 +82,24 @@ cat << EOF > "$plistPath"
 </plist>
 EOF
 
+# kill OneDrive .app AND .appex to avoid the window cycling
+od_pids=$(pgrep "OneDrive")
+for i in $od_pids; do
+	kill -HUP "$i"
+done    
+
+# set permissions
 chmod 644 "$plistPath"
 chown "$currentUser":staff "$plistPath"
 
-/bin/launchctl bootstrap gui/"$uid" "$plistPath"/"$plistName"
+# load the LaunchAgent as current user
+/bin/launchctl bootstrap gui/"$uid" "$plistPath"
 
-# # run in userspace to verify LaunchAgents
-# 
-# sleep 1 # disable on newer systems?
-# 
-# if /bin/launchctl asuser "$uid" sudo -iu "$currentUser" /bin/launchctl list | grep -q "$plistName" ; then # https://www.shellcheck.net/wiki/SC2143
-#  	echo "KeepAlive job successfully loaded."
-# else
-#  	echo "KeepAlive job failed to load."
-# fi
-# 
-# # run as root (Jamf default) to check on LaunchDaemons
-# 
-# if /bin/launchctl list | grep -q "$plistName" ; then # https://www.shellcheck.net/wiki/SC2143
-# 	echo "KeepAlive job successfully loaded."
-# else
-# 	echo "KeepAlive job failed to load."
-# fi
+# run in userspace to report accurately
+sleep 1
+
+if /bin/launchctl asuser "$uid" sudo -iu "$currentUser" /bin/launchctl list | grep -q com.microsoft.onedrive.keepalive ; then # https://www.shellcheck.net/wiki/SC2143
+ 	echo "KeepAlive job successfully loaded."
+else
+ 	echo "KeepAlive job failed to load."
+fi
