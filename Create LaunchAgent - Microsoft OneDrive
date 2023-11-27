@@ -4,16 +4,9 @@
 # to check whether OneDrive has been configured, exit if not -
 # otherwise this will bring up the OneDrive login window every 5-10sec
 
-# WIP: parse parameters 4-5 for:
-#  name of the job: .plist
-#  type of the job: LaunchAgent, LaunchDaemon, etc
-# set plistPath based on (validated) input
-#
-# plistPath="$4"
-# plistName="$5"
-# 
-# change the launchctl check to know the path and name
-# OR, do we just keep two separate scripts and avoid pilot error?
+# TODO:
+#   write out status whether OD has been configured (presence of .dat)
+#   come back later and re-run the launchctl load once that's present
 #
 # OneDrive MUST quit and re-open after loading this launchd job, otherwise
 # users will report windows cycling badly enough to be quote 'unusable'
