@@ -4,64 +4,29 @@
 # to check whether OneDrive has been configured, exit if not -
 # otherwise this will bring up the OneDrive login window every 5-10sec
 
-# TODO:
-#   write out status whether OD has been configured (presence of .dat)
-#   come back later and re-run the launchctl load once that's present
-#
 # OneDrive .app / .appex MUST quit before loading this launchd job, otherwise
 # users will report windows cycling badly enough to be quote 'unusable'
 
-
 # variables
 
-# currentUser=$(stat -f%Su /dev/console)
-# uid=$(id -u "$currentUser")
+currentUser=$(stat -f%Su /dev/console)
+uid=$(id -u "$currentUser")
 
-# functions
-
-GetLoggedInUser() {
-	currentUser=$(/bin/echo "show State:/Users/ConsoleUser" | /usr/sbin/scutil | /usr/bin/awk '/Name :/&&!/loginwindow/{print $3}')
-	if [ "$currentUser" = "" ]; then
-		echo "$USER"
-	else
-		echo "$currentUser"
-	fi
-}
-
-GetLoggedInUID() {
-	currentUserUID=$(/usr/bin/id -u "$currentUser")
-}
-
-SetHomeFolder() {
-	HOME=$(dscl . read /Users/"$1" NFSHomeDirectory | cut -d ':' -f2 | cut -d ' ' -f2)
-	if [ "$HOME" = "" ]; then
-		if [ -d "/Users/$1" ]; then
-			HOME="/Users/$1"
-		else
-			HOME=$(eval echo "~$1")
-		fi
-	fi
-}
-
-# Main
-LoggedInUser=$(GetLoggedInUser)
-SetHomeFolder "$LoggedInUser"
+HOME=$(dscl . read /Users/"$currentUser" NFSHomeDirectory | cut -d ':' -f2 | cut -d ' ' -f2)
 
 # Find last modified time of sync file
-DataFile=$(find "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/*dat | head -n 1)
+DataFile=$(ls -t "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/*dat | head -n 1)
 if [ "$DataFile" != "" ]; then
 	EpochTime=$(stat -f %m "$DataFile")
 	UTCDate=$(date -u -r "$EpochTime" '+%m/%d/%Y')
 	echo "<result>$UTCDate</result>"
 else
-	echo "<result>OneDrive not configured, so no LaunchAgent to load..</result>"
+	echo "OneDrive not configured, so no LaunchAgent to load.."
 	exit 0
 fi
 
-# define the plist name in LaunchAgents
 plistPath="/Library/LaunchAgents/com.microsoft.onedrive.keepalive.plist"
 
-# the plist with the KeepAlive key
 cat << EOF > "$plistPath"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -79,23 +44,23 @@ cat << EOF > "$plistPath"
 </plist>
 EOF
 
-# kill OneDrive .app AND .appex to avoid the window cycling
+# kill both OneDrive.app and OneDrive File Provider.appex
+
 od_pids=$(pgrep "OneDrive")
 for i in $od_pids; do
 	kill -HUP "$i"
 done    
 
-# set permissions
 chmod 644 "$plistPath"
-chown "$LoggedInUser":staff "$plistPath"
+chown "$currentUser":staff "$plistPath"
 
-# load the LaunchAgent as current user
-/bin/launchctl bootstrap gui/"$currentUserUID" "$plistPath"
+/bin/launchctl bootstrap gui/$uid "$plistPath"
 
 # run in userspace to report accurately
+
 sleep 1
 
-if /bin/launchctl asuser "$currentUserUID" sudo -iu "$LoggedInUser" /bin/launchctl list | grep -q com.microsoft.onedrive.keepalive ; then # https://www.shellcheck.net/wiki/SC2143
+if /bin/launchctl asuser "$uid" sudo -iu "$currentUser" /bin/launchctl list | grep -q com.microsoft.onedrive.keepalive ; then # https://www.shellcheck.net/wiki/SC2143
  	echo "KeepAlive job successfully loaded."
 else
  	echo "KeepAlive job failed to load."
