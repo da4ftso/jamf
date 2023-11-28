@@ -48,7 +48,7 @@ LoggedInUser=$(GetLoggedInUser)
 SetHomeFolder "$LoggedInUser"
 
 # Find last modified time of sync file
-DataFile=$(ls -t "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/*dat | head -n 1)
+DataFile=$(find "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/*dat | head -n 1)
 if [ "$DataFile" != "" ]; then
 	EpochTime=$(stat -f %m "$DataFile")
 	UTCDate=$(date -u -r "$EpochTime" '+%m/%d/%Y')
