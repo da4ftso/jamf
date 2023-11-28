@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # TODO: check if existing launchagent job
+#  check for presence of aupport file/folder, bail out if nonexistent
 
-# variables
+# variables - do we need to get $home
 
 currentUser=$(stat -f%Su /dev/console)
 uid=$(id -u "$currentUser")
