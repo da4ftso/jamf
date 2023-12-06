@@ -7,6 +7,9 @@
 # OneDrive .app / .appex MUST quit before loading this launchd job, otherwise
 # users will report windows cycling badly enough to be quote 'unusable'
 
+# the cycling/flashing behavior will also resume after every startup until
+# OneDrive has been closed once
+
 # variables
 
 currentUser=$(stat -f%Su /dev/console)
@@ -15,7 +18,7 @@ uid=$(id -u "$currentUser")
 HOME=$(dscl . read /Users/"$currentUser" NFSHomeDirectory | cut -d ':' -f2 | cut -d ' ' -f2)
 
 # Find last modified time of sync file
-DataFile=$(ls -t "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/*dat | head -n 1)
+DataFile=$(ls -t "$HOME"/Library/Application\ Support/OneDrive/settings/Business1/* | head -n 1)
 if [ "$DataFile" != "" ]; then
 	EpochTime=$(stat -f %m "$DataFile")
 	UTCDate=$(date -u -r "$EpochTime" '+%m/%d/%Y')
