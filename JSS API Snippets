@@ -1,11 +1,32 @@
 ## JSS API SNIPPETS ##
 
-
 ## variables
 
-jssurl=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url)
+jamf_URL=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url)
+jamf_URL_bare=$( /usr/bin/defaults read /Library/Preferences/com.jamfsoftware.jamf.plist jss_url | sed -e 's/https:\/\///' -e 's/\/.*//' -e 's/:.*//' )  # no http*, no /, no:8443
+jamf_URL=${jamf_URL%%/}  # remove trailing slash
+
+echo "$jamf_URL"
 apiuser="yourapiuser"
 apipass="yourapiuserpass"
+
+## store results in variable, then lint out
+
+echo "Calling the API..."
+
+# Store the curl response in a variable
+RESPONSE=$(curl -ks "$jamf_URL"/JSSResource/computers/serialnumber/"$SERIAL_NUMBER" --user "$apiuser":"$apipass")
+
+# Extract information using xmllint
+BUILDING=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/location/building/text()' -)
+DEPT=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/location/department/text()' -)
+ROOM=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/location/room/text()' -)
+NAME=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/location/username/text()' -)
+TAG=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/general/asset_tag/text()' -)
+
+echo "Grabbed $NAME ; $BUILDING ; $DEPT ; $ROOM ; $TAG"
+
+
 
 serial=$(/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice | /usr/bin/awk -F'"' '/IOPlatformSerialNumber/{print $4}')
 
@@ -15,18 +36,18 @@ serial=$(/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice | /usr/bin/awk -F'"' '/I
 # ref https://aporlebeke.wordpress.com/2019/01/04/auto-clearing-failed-mdm-commands-for-macos-in-jamf-pro/
 
 clearfailedmdmcommands () {
-	/usr/bin/curl -sfku "$apiuser":"$apipass" "$jssurl":8443/JSSResource/commandflush/computers/id/"$computerID"/status/Failed -X DELETE
+	/usr/bin/curl -sfku "$apiuser":"$apipass" "$jamf_URL"/JSSResource/commandflush/computers/id/"$computerID"/status/Failed -X DELETE
 }
 
 getjsscomputerid () {
-	computerID=$(/usr/bin/curl -u "$apiuser":"$apipass" "$jssurl":8443/JSSResource/computers/serialnumber/"$serial" -H "accept: text/xml" | /usr/bin/xpath "/computer[1]/general/id/text()")
+	computerID=$(/usr/bin/curl -u "$apiuser":"$apipass" "$jamf_URL/JSSResource/computers/serialnumber/"$serial" -H "accept: text/xml" | /usr/bin/xpath "/computer[1]/general/id/text()")
 }
 
 getfailedmdmcommands () {
-	xmlresult=$(/usr/bin/curl -sfku "$apiuser":"$apipass" "$jssurl":8443/JSSResource/computerhistory/serialnumber/"$serial"/subset/Commands -X GET -H "accept: application/xml" | /usr/bin/xpath "/computer_history/commands/failed")
+	xmlresult=$(/usr/bin/curl -sfku "$apiuser":"$apipass" "$jamf_URL/JSSResource/computerhistory/serialnumber/"$serial"/subset/Commands -X GET -H "accept: application/xml" | /usr/bin/xpath "/computer_history/commands/failed")
 }
 
 getcomputer () { 
 	xmlresult=$(/usr/bin/curl --request GET \
-     -sfku "$apiuser":"$apipass" "$jssurl":8443/JSSResource/computers/match/LJY4H0414FX
+     -sfku "$apiuser":"$apipass" "$jamf_URL/JSSResource/computers/match/LJY4H0414FX
 }
