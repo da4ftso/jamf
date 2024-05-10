@@ -1,14 +1,59 @@
-&& sudo -u $3 /usr/local/bin/brew cu -ay #!/bin/sh
-echo "brew has updated"
+#!/bin/bash
 
-# check for existence of brew at /usr/local/bin
-# v3 added brew upgrade 
+# variables
 
-if [ -f "/usr/local/bin/brew" ]; then
-    sudo -u $3 /usr/local/bin/brew update && sudo -u $3 /usr/local/bin/brew upgrade && sudo -u $3 /usr/local/bin/brew cu -ay && sudo -u $3 /usr/local/bin/brew cleanup
-    echo "brew has updated"
-    exit 0
+# current user
+consoleuser="$( echo "show State:/Users/ConsoleUser" | scutil | awk '/Name :/ && ! /loginwindow/ { print $3 }' )"
+
+# arch
+UNAME_MACHINE="$(uname -m)"
+
+# Set the prefix based on the machine type
+if [[ "$UNAME_MACHINE" == "arm64" ]]; then
+    # M1/arm64 machines
+    HOMEBREW_PREFIX="/opt/homebrew"
 else
-    echo "brew not found, exiting.."
-    exit 1
+    # Intel machines
+    HOMEBREW_PREFIX="/usr/local"
+fi
+
+# logging
+LOGFOLDER="/private/var/log/"
+LOG="${LOGFOLDER}Homebrew.log"
+
+if [ ! -d "$LOGFOLDER" ]; then
+    mkdir $LOGFOLDER
+fi
+
+cac4=/opt/cisco/anyconnect/bin/vpn
+cac5=/opt/cisco/secureclient/bin/vpn
+
+# check for VPN connection
+if [[ -e $cac4 ]]; then
+	vpnstatus=$($cac4 state | awk '/state:/ { print $NF; exit } ')
+elif [[ -e $cac5 ]]; then
+	vpnstatus=$($cac5 state | awk '/state:/ { print $NF; exit } ')
 fi    
+
+if [[ "$vpnstatus" = "Connected" ]]; then
+
+	echo "VPN connected, exiting.."
+	exit 0
+	
+fi
+
+# check if we can reach the source
+ping -c 1 github.com
+rc=$?
+
+if [[ $rc -eq 0 ]]; then
+
+	su -l "$consoleuser" -c "${HOMEBREW_PREFIX}/bin/brew update" 2>&1 | tee -a ${LOG}
+    
+else
+
+	echo "Cannot reach github.com, exiting.. "
+
+fi
+
+exit 0
