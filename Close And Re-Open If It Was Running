@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Name of the application (e.g., "Safari", "Google Chrome")
+APP_NAME="$4"
+
+if [ "$APP_NAME" == "" ] ; then
+  echo "No app name specified, exiting.."
+  exit 1
+fi
+
+# Check if the app is running
+if pgrep -x "$APP_NAME" > /dev/null; then
+    echo "$APP_NAME is running, will close it gracefully."
+    
+    # Gracefully close the app using AppleScript
+    osascript -e "quit app \"$APP_NAME\""
+    
+    # Wait for the app to close
+    sleep 2
+else
+    echo "$APP_NAME is not running."
+fi
+
+# Do something else here (e.g., run a command, script, etc.)
+echo "Performing other tasks..."
+
+# Reopen the app if it was running before
+if pgrep -x "$APP_NAME" > /dev/null; then
+    echo "$APP_NAME is running again. No need to reopen."
+else
+    echo "$APP_NAME was not running before, reopening it now."
+    open -a "$APP_NAME"
+fi
