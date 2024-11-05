@@ -4,7 +4,7 @@
 #  first script (before) checks app status, closes app and writes a variable
 #  second script (after) reads variable to decide whether to reopen app
 
-# Read in the application name from the temp file
+# Read in the application name from the temp file created in first script (before)
 if [ -e /private/var/tmp/itwasrunning ]; then
     APP_NAME="$(cat /private/var/tmp/itwasrunning)"
     rm /private/var/tmp/itwasrunning
