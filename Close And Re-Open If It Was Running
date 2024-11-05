@@ -1,10 +1,24 @@
 #!/bin/bash
 
+# this is the limited one-step version.
+# pass parameters from Jamf:
+#  $4 = app name
+#  $5 = jamf policy event or trigger name
+#  $6 = jamf policy id
+#
+# TO-DO:
+#  
+
 # Name of the application (e.g., "Safari", "Google Chrome")
 APP_NAME="$4"
 
-if [ "$APP_NAME" == "" ] ; then
+if [ -z "$4" ] ; then
   echo "No app name specified, exiting.."
+  exit 1
+fi
+
+if [ -z "$5" ] && [ -z "$6" ] ; then
+  echo "No jamf event or id specified, exiting.."
   exit 1
 fi
 
@@ -21,8 +35,13 @@ else
     echo "$APP_NAME is not running."
 fi
 
-# Do something else here (e.g., run a command, script, etc.)
-echo "Performing other tasks..."
+# Do something else here (e.g., jamf policy -event / -id)
+
+if [ -z "$6" ]; then
+  /usr/local/jamf policy -event "$5"
+else
+  /usr/local/jamf policy -id "$6"
+fi
 
 # Reopen the app if it was running before
 if pgrep -x "$APP_NAME" > /dev/null; then
