@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# this is the two-step, two script version:
+#  first script (before) checks app status, closes app and writes a variable
+#  second script (after) reads variable to decide whether to reopen app
+# 
+# pass parameters from Jamf:
+#  $4 = app name
+
+# Name of the application (e.g., "Safari", "Google Chrome")
+APP_NAME="$4"
+
+if [ -z "$4" ] ; then
+  echo "No app name specified, exiting.."
+  exit 1
+fi
+
+# Check if the app is running
+if pgrep -x "$APP_NAME" > /dev/null; then
+    echo "$APP_NAME is running, will close it gracefully."
+    
+    # Gracefully close the app using AppleScript
+    osascript -e "quit app \"$APP_NAME\""
+    
+    # Wait for the app to close
+    sleep 2
+else
+    echo "$APP_NAME is not running."
+    exit 0
+fi
+
+# Write out a temporary variable for the second script to read after other jamf actions
+if [ -e /private/var/tmp/itwasrunning ]; then
+  rm /private/var/tmp/itwasrunning
+fi
+touch /private/var/tmp/itwasrunning
