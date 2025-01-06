@@ -3,8 +3,8 @@
 # Set to run Before, typically
 
 # Name of the app to check (e.g., "Safari")
-# Find that shell expansion that dealt with .app
 APP_NAME="$4"
+APP_NAME="${APP_NAME%.app}" # shell expansion to remove .app
 
 # Function to check if the app is running
 # Pass -x for exact matching
