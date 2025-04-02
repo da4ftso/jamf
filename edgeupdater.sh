@@ -6,7 +6,7 @@
 updateDir="/Library/Application Support/Microsoft/EdgeUpdater/apps"
 
 if [[ -d "${updateDir}" ]]; then
-        space=$(du -h "${updateDir}" | tail -1 | awk ' { print $1 }')
+        space=$(du -h "${updateDir}" | awk 'END { print $1 } ')
         rm -rf "${updateDir:?}"/*
         echo "Removed ""$space"" of old updates.."
 fi
