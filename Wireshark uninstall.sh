@@ -46,5 +46,10 @@ for i in "${list[@]}"; do
 done    
 
 # https://gitlab.com/wireshark/wireshark/-/issues/18734
-pkgutil --forget org.wireshark.Wireshark
-pkgutil --forget org.wireshark.ChmodBPF.pkg
+
+# pkgutil --forget org.wireshark.Wireshark
+# pkgutil --forget org.wireshark.ChmodBPF.pkg
+
+for i in $(/usr/sbin/pkgutil --pkgs | grep -iE wireshark ); do
+        pkgutil --forget "$i"
+done
