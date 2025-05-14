@@ -33,7 +33,7 @@ echo "🚨 New version detected: $current_version"
 # 👉 Your custom action here
 # For example: trigger a Jamf policy or download the new installer
 echo "▶️ Running update process..."
-# jamf policy -event install_defender_update
+curl -O https://officecdnmac.microsoft.com/pr/4B2D7701-0A4F-49C8-B4CB-0C2D4043F51F/MacAutoupdate/wdav-upgrade.pkg
 
 # Update the stored version
 echo "$current_version" > "$VERSION_FILE"
