@@ -17,7 +17,7 @@
 #  Mac Studio (M2 Ultra, 2023):				Mac14,14
 #  MacBook Air (15-inch, M2, 2023):			Mac14,15
 
-# to put in another way, you can't rely upon "Book" being anywhere in ioreg anymore
+# to put it another way, you can't rely upon "Book" being anywhere in ioreg anymore
 # https://support.apple.com/en-us/HT201300
 
 serial="$(ioreg -l | grep IOPlatformSerialNumber | sed -e 's/.*\"\(.*\)\"/\1/')"
