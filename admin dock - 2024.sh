@@ -17,7 +17,7 @@
 # ✅ validate new AD, ARD vs SS checks, & that add to array works as intended
 # ✅ check OS version, add System Prefs vs System Settings
 
-# if dockutil is present, bail out
+# if dockutil is present, continue
 # if dockutil is not present, read jss and try jamf policy first
 # if jss is empty OR if jss not empty BUT dockutil still not present, try direct download
 # if dockutil still not present, bail out
@@ -30,7 +30,7 @@ uid=$(id -u "$currentUser") # 501
 
 jss_url=$(defaults read /Library/Preferences/com.jamfsoftware.jamf.plist jss_url)
 
-# run as user since Jamf runs scripts by default, and we're poking userspace
+# run as user since Jamf runs scripts as root by default, and we're poking userspace
 
 runAsUser() {  
   if [ "$currentUser" != "loginwindow" ]; then
