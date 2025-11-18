@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# TO-DO: output file to include LocalHostName
+# TO-DO: output file to include LocalHostName or Serial
 
 # variables
 currentUser=$( stat -f%Su /dev/console )
 currentUserHome=$(eval echo "~$currentUser")
+# serial=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')
 
 
 # logged in user
