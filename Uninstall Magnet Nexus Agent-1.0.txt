@@ -1,0 +1,25 @@
+﻿#!/bin/bash
+
+if [ ! -e "/Applications/MagnetNexus/Agent.app" ]; then
+	echo "MagnetNexus Agent not found, exiting..."
+    exit 0
+fi
+
+/bin/launchctl bootout system/Agent
+/bin/launchctl stop Agent
+
+files=(
+	"/Library/LaunchDaemons/Agent.plist"
+    "/Library/LaunchDaemons/NexusAgentA.plist"
+    "/Library/LaunchDaemons/NexusAgentB.plist"
+    "/Applications/MagnetNexus/"
+)
+
+for f in "${files[@]}"; do
+	if [[ -e "$f" ]]; then
+    	echo "Deleting ""$f"
+        rm -rf "$f"
+	fi
+done
+
+exit 0
