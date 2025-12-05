@@ -17,7 +17,7 @@ files=(
 
 for f in "${files[@]}"; do
 	if [[ -e "$f" ]]; then
-    	echo "Deleting ""$f"
+    	echo "Deleted ""$f""
         rm -rf "$f"
 	fi
 done
