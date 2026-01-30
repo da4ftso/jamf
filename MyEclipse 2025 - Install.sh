@@ -1,8 +1,14 @@
 #!/bin/bash
+set -x
 
-# 1.0 unattended install for MyEclipse 2025.12 - cloned from the 2022 version & improved
-# to-do: change from hardcoded installer version and pass param 4
-#    but that will require some detection logic to verify DMG
+# 1.0.1 unattended install for MyEclipse 2025.12 - cloned from the 2022 version & improved
+#
+# TO-DO: change from hardcoded installer version and pass param 4
+#    (but that will require some detection logic to verify DMG)
+#  more logging
+#  unmount the volume after standard-install has completed
+#  clean-up the DMG
+#  clean up the response.txt
 
 # variables
 
@@ -33,10 +39,9 @@ result.file=/Users/Shared/myeclipse-install.log
 
 EOF
 
-
-
 # install (automatic but not silent)
 
-/usr/bin/sudo -u "$currentUser" /Volumes/MyEclipse/MyEclipse\ 2022.1.0a\ Installer.app/Contents/MacOS/standard-install --unattended /private/var/tmp/response.txt
+/usr/bin/sudo -u "$currentUser" /Volumes/MyEclipse/MyEclipse\ 2025.2.0\ Installer.app/Contents/MacOS/standard-install --unattended /private/var/tmp/response.txt
+
 
 exit 0
