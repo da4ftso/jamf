@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
-# TO-DO:
-# pass filename as param 4, validate
+# this assumes that you have cached an AnypointStudio.dmg to Waiting Room
 
-
-# this assumes that you have cached AnypointStudio-VER-{ARCH}.dmg to Waiting Room
+# validation
+if [[ -z "$4" ]]; then
+    echo "Error: no filename provided, exiting.." >&2
+    exit 1
+fi
 
 # variables
-currentUser=$( stat -f%Su /dev/console ) 
+currentUser=$( stat -f%Su /dev/console )
+DMG="$4"
 
 # mount
-hdiutil mount /Library/Application\ Support/JAMF/Waiting\ Room/AnypointStudio-7.24.0-macosArm.dmg
+hdiutil mount /Library/Application\ Support/JAMF/Waiting\ Room/"${DMG}"
 
 # ditto doesn't seem to work reliably, neither does cp?
 rsync -avhPrq /Volumes/AnypointStudio/AnypointStudio.app /Applications/ 
@@ -22,4 +25,4 @@ chown -R $currentUser /Applications/AnypointStudio.app
 hdiutil unmount /Volumes/AnypointStudio 
 
 # cleanup
-rm /Library/Application\ Support/JAMF/Waiting\ Room/AnypointStudio*
+rm /Library/Application\ Support/JAMF/Waiting\ Room/"${DMG}"*
