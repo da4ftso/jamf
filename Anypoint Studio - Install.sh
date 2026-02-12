@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 # TO-DO:
-# replace shebang with the better env version
 # pass filename as param 4, validate
 
 
-# this assumes that you have cached AnypointStudio-VER-ARCH.dmg to Waiting Room
+# this assumes that you have cached AnypointStudio-VER-{ARCH}.dmg to Waiting Room
 
 # variables
 currentUser=$( stat -f%Su /dev/console ) 
