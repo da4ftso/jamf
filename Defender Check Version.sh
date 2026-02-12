@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# TO-DO: validate DNS and connectivity to those hosts
 
 currentUser=$( /usr/bin/stat -f%Su "/dev/console" )
 currentUserHome=$(/usr/bin/dscl . -read "/Users/$currentUser" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
