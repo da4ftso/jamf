@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # set DBeaver pref to disable usage collection
 # even though DBeaver publishes their policy and claim to anonymize all data
