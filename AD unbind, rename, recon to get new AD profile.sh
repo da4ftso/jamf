@@ -1,12 +1,10 @@
 #!/bin/sh
 
-
 # In order to efficiently standardize all existing AD-bound Macs' computer records, this script will:
 # 
 # 1. un-bind from the existing/inherited AD (Computer Management > Directory Bindings) after validating parameters
 # 2. use the jamf binary to reset the computer's name(s) to serial;
 # 3. recon to show 'No AD' to include the computer into a Smart Group, which will then get the (new) AD configuration profile based on scope.
-
 
 # 1. check for parameters, pass to dsconfigad, unbind
 #    best practice is to NEVER hard-code a password in a script
