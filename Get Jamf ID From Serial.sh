@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # set apiusername and apipassword, otherwise great sadness
 
