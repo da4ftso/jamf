@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # set Chrome to use native macOS print dialog
 # required for some Xerox job accounting to work properly
