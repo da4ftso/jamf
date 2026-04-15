@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Adobe ent support has not been esp. helpful.
+# this is best-effort to try to disable GenAI in Acrobat.
+#
+# a previous attempt resulted in subdirs being created; shouldn't be 
+# necessary for you, but go ahead and uncomment lns 32-34 if you want
+
+# variables
+
+currentUser=$(stat -f %Su "/dev/console") # pete
+uid=$(id -u "$currentUser") # 501
+
+
+# run as user since Jamf runs scripts as root by default, and we're poking userspace
+
+runAsUser() {  
+  if [ "$currentUser" != "loginwindow" ]; then
+    launchctl asuser "$uid" sudo -u "$currentUser" "$@"
+  else
+    echo "no user logged in"
+    # uncomment the exit command to make the function exit with an error when no user is logged in
+    # exit 1
+  fi
+} 
+
+# runAsUser /usr/bin/osascript -e 'tell application "Adobe Acrobat" to open' -e 'tell application "System Events" to set visible of process "Adobe Acrobat" to false'
+
+
+# earlier evrsion may have written directories instead of .plists?
+
+# if [ -d "/Library/Preferences/com.adobe.Acrobat.Pro.plist" ]; then
+#         rmdir "/Library/Preferences/com.adobe.Acrobat.Pro.plist"
+# fi        
+
+
+PLISTS=(
+  "/Library/Preferences/com.adobe.Acrobat.Pro.plist"
+)
+
+for PLIST in "${PLISTS[@]}"; do
+
+# exists
+if [ ! -f "$PLIST" ]; then
+    /usr/libexec/PlistBuddy -c "Save" "$PLIST" 2>/dev/null || touch "$PLIST"
+fi
+
+/usr/libexec/PlistBuddy -c "Print :DC" "$PLIST" >/dev/null 2>&1 || \
+/usr/libexec/PlistBuddy -c "Add :DC dict" "$PLIST"
+
+/usr/libexec/PlistBuddy -c "Print :DC:FeatureLockdown" "$PLIST" >/dev/null 2>&1 || \
+/usr/libexec/PlistBuddy -c "Add :DC:FeatureLockdown dict" "$PLIST"
+
+# set
+/usr/libexec/PlistBuddy -c "Set :DC:FeatureLockdown:bEnableGentech false" "$PLIST" 2>/dev/null || \
+/usr/libexec/PlistBuddy -c "Add :DC:FeatureLockdown:bEnableGentech bool false" "$PLIST"
+
+echo "Updated: $PLIST"
+
+done
+
+# close Acrobat
+# runAsUser /usr/bin/osascript -e 'tell application "Adobe Acrobat" to quit'
+
+# echo "Done."
