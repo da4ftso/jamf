@@ -5,16 +5,19 @@
 # Jamf Pro since ??? reports capacity and health, BUT
 # needs to be up to date version of Pro to accurately return latest hw
 
-hw=$(system_profiler SPHardwareDataType 2&>/dev/null | awk '/Model Name/ {print $3, $4}') # MacBook Pro
+# echo -e is bash only
+
+#!/bin/bash
+
+hw=$(system_profiler SPHardwareDataType | awk '/Model Name/ {print $3, $4}') # MacBook Pro
 
 if [[ $hw == MacBook* ]]; then
 	count=$(system_profiler SPPowerDataType | awk '/Cycle Count:/ { print $NF }')
+    	echo -e "Cycles:\t\t$count"
+	capacity=$(system_profiler SPPowerDataType | awk '/Maximum Capacity:/ { print $NF }')
+    	echo -e "Capacity:\t$capacity"
     status=$(system_profiler SPPowerDataType | awk '/Condition:/ { print $NF; exit }')
-else
-	count=""
+		echo -e "Status:\t\t$status"
 fi
-
-echo "Cycle count:  $count"
-echo "Health:       $status"
 
 exit 0
