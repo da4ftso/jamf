@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# to-do: check launchctl for Agent* and only bootout if found
+# 1.0.2
 
-if [ -e "/Applications/MagnetNexus/Agent.app" ] || [ -e "/Applications/MagnetNexus/NexusAgentA.app" ] ; then
+if [ -e "/Applications/MagnetNexus/Agent.app" ] || [ -e "/Applications/MagnetNexus/NexusAgentA.app" ] || [ -e "/Applications/MagnetNexus/NexusAgentB.app" ] ; then
 
 	/bin/launchctl bootout system/Agent
 	/bin/launchctl stop Agent
@@ -17,7 +17,7 @@ files=(
 	for f in "${files[@]}"; do
 		if [[ -e "$f" ]]; then
     		echo "Deleting ""$f"
-	        rm -rf "$f"
+	        rm -Rf "$f"
 		fi
 		done
         
