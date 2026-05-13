@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # see Extension Attributes repo for a battery count EA
+# https://github.com/da4ftso/Extension-Attributes/blob/master/HW%20-%20Battery%20Cycle%20Count.sh
 
-# Jamf Pro since v??? reports capacity and health, BUT
-# needs to be up to date version of Pro to accurately return latest hw
+# Jamf Pro since v? reports capacity and health, but needs to 
+# be up-to-date version of Pro to accurately report latest HW
 
 # echo -e is bash only
 
