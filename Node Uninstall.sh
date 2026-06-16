@@ -1,49 +1,73 @@
 #!/bin/bash
 
-# 1.0 250430 vibe
+# 1.1 250616 - Updated for Jamf Pro execution without logged-in user
+# Removes Node.js installations from system-level locations
 
-echo "Uninstalling Node.js..."
+set -e  # Exit on error
 
-# function to delete a file or directory if it exists
+# Jamf Pro Script Log
+echo "Starting Node.js uninstallation script..."
+
+# Function to safely remove a file or directory
 remove_path() {
-    if [ -e "$1" ]; then
-        echo "Removing $1"
-        sudo rm -rf "$1"
+    local path="$1"
+    if [ -e "$path" ]; then
+        echo "Removing $path..."
+        rm -rf "$path"
+    else
+        echo "Path not found: $path"
     fi
 }
 
-# uninstall Node.js installed via Homebrew
-if command -v brew &> /dev/null && brew list node &> /dev/null; then
-    echo "Node.js found via Homebrew. Uninstalling..."
-    brew uninstall node
+# Function to check if command exists in PATH
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+echo "Uninstalling Node.js..."
+
+# Uninstall Node.js installed via Homebrew (Intel)
+if command_exists brew && brew list node >/dev/null 2>&1; then
+    echo "Node.js found via Homebrew (Intel). Uninstalling..."
+    brew uninstall -f node 2>/dev/null || echo "Homebrew uninstall failed, continuing..."
 fi
 
-# uninstall NVM-managed Node.js versions
-if [ -d "$HOME/.nvm" ]; then
-    echo "Found NVM. Removing NVM and Node versions managed by it..."
-    remove_path "$HOME/.nvm"
-    remove_path "$HOME/.npm"
-    remove_path "$HOME/.node-gyp"
-    sed -i.bak '/NVM_DIR/d' ~/.bash_profile ~/.zshrc ~/.profile 2>/dev/null
+# Uninstall Node.js installed via Homebrew (Apple Silicon)
+if [ -d "/opt/homebrew" ]; then
+    if /opt/homebrew/bin/brew list node >/dev/null 2>&1; then
+        echo "Node.js found via Homebrew (Apple Silicon). Uninstalling..."
+        /opt/homebrew/bin/brew uninstall -f node 2>/dev/null || echo "Homebrew uninstall failed, continuing..."
+    fi
 fi
 
-# remove Node.js files from /usr/local (common for pkg installs and manual installs)
-echo "Removing Node.js system files..."
-remove_path "/usr/local/lib/node_modules"
-remove_path "/usr/local/include/node"
-remove_path "/usr/local/bin/node"
-remove_path "/usr/local/bin/npm"
-remove_path "/usr/local/bin/npx"
-remove_path "/usr/local/share/man/man1/node.1"
-remove_path "/usr/local/share/systemtap/tapset/node.stp"
+# Define paths to remove
+declare -a paths_to_remove=(
+    "/usr/local/lib/node_modules"
+    "/usr/local/include/node"
+    "/usr/local/bin/node"
+    "/usr/local/bin/npm"
+    "/usr/local/bin/npx"
+    "/usr/local/share/man/man1/node.1"
+    "/usr/local/share/man/man1/npm.1"
+    "/usr/local/share/systemtap/tapset/node.stp"
+    "/opt/homebrew/bin/node"
+    "/opt/homebrew/bin/npm"
+    "/opt/homebrew/bin/npx"
+    "/opt/homebrew/lib/node_modules"
+    "/opt/homebrew/share/man/man1/node.1"
+    "/opt/homebrew/share/man/man1/npm.1"
+    "/opt/local/bin/node"
+    "/opt/local/bin/npm"
+    "/opt/local/bin/npx"
+    "/opt/local/lib/node_modules"
+    "/usr/local/nvm"
+    "/usr/local/npm-cache"
+)
 
-# remove Node.js from /opt/homebrew (Apple Silicon Homebrew)
-remove_path "/opt/homebrew/bin/node"
-remove_path "/opt/homebrew/bin/npm"
-remove_path "/opt/homebrew/lib/node_modules"
+echo "Removing Node.js files from system locations..."
+for path in "${paths_to_remove[@]}"; do
+    remove_path "$path"
+done
 
-# remove cached files
-remove_path "$HOME/.npm"
-remove_path "$HOME/.node-gyp"
-
-echo "Node.js has been uninstalled."
+echo "Node.js uninstallation completed successfully."
+exit 0
