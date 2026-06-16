@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# CAC
+
 # variables
 
 user=$(stat -f %Su /dev/console)
