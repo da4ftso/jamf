@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# CAC
+
 # original https://raw.githubusercontent.com/aysiu/Mac-Scripts-and-Profiles/master/DockutilAddRemoveArrays.sh
 # bash string manipulations here https://www.tldp.org/LDP/LG/issue18/bash.html
 
