@@ -7,49 +7,32 @@
 # logging
 startTime=$( /bin/date '+%s' ) # epoch time
 
-# variables?
-# probably only for dock? if 'macktez' call a different admin dock policy?
+# Define policies array
+policies=(
+    "Install_MSOffice365"
+    "Install_Chrome"
+    "install-drive"
+    "install-acc"
+    "install-rum"
+    "Install_AdobeAcrobatReaderDCUpdates"
+    "install-dockutil"
+    "install-silnite"
+)
 
-# policies
+# Execute all policies
+for policy in "${policies[@]}"; do
+    /usr/local/bin/jamf policy -event "$policy"
+done
 
-# Office 365
-/usr/local/bin/jamf policy -event Install_MSOffice365 # ✅
-
-# Google Chrome
-/usr/local/bin/jamf policy -event Install_Chrome # ✅
-
-# Google Drive
-/usr/local/bin/jamf policy -event install-drive # ✅
-
-# ACC
-/usr/local/bin/jamf policy -event install-acc # ✅
-
-# Adobe RUM
-/usr/local/bin/jamf policy -event install-rum # ✅
-
-# Adobe Reader DC
-/usr/local/bin/jamf policy -event Install_AdobeAcrobatReaderDCUpdates # ✅
-
-# Zoom
-# /usr/local/bin/jamf policy -event install-zoom # ✅
-
-# policies (utilities)
-
-# dockutil
-/usr/local/bin/jamf policy -event install-dockutil # ✅
-
-# SilentKnight
-/usr/local/bin/jamf policy -event install-silnite # ✅
-
-# outset?
-
+# TODO: Conditional policies
 #    [CAC only: if Group == CAC, then...]
 # fonts
 # Xerox driver (Xerox options / configuration?)
 # CAC branding
 # MC branding
 # script to apply user account images?
-
+# Note: Zoom install currently commented out in original
+# /usr/local/bin/jamf policy -event install-zoom
 
 # end logging
 
