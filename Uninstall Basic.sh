@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# param 4 app name
+# sanitize to add ".app"
+
+
 if [ "$4" == "" ]; then
   echo "No app name specified, exiting.."
   exit 1
