@@ -1,47 +1,47 @@
 #!/bin/bash
+set -euo pipefail
 
-# variables
-
-lastUser=$( /usr/sbin/scutil <<< "show State:/Users/ConsoleUser" | /usr/bin/awk '/Name :/ && ! /loginwindow/ { print $3 }' )
+# user variables
+lastUser=$(/usr/sbin/scutil <<< "show State:/Users/ConsoleUser" | /usr/bin/awk '/Name :/ && ! /loginwindow/ { print $3 }')
 currentUser=$(/usr/bin/stat -f%Su "/dev/console")
-userHome=$(/usr/bin/dscl . -read "/Users/$currentUser" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+userHome=$(/usr/bin/dscl . -read "/Users/$currentUser" NFSHomeDirectory | /usr/bin/awk '{ print $NF }')
 
-if [ "$currentUser" == "" ] || [ "$currentUser" == "root" ]; then
- userHome=$(/usr/bin/dscl . -read "/Users/$lastUser" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+if [[ -z "$currentUser" || "$currentUser" == "root" ]]; then
+    userHome=$(/usr/bin/dscl . -read "/Users/$lastUser" NFSHomeDirectory | /usr/bin/awk '{ print $NF }')
 fi
 
-# bootout LaunchDaemon
+# bootout
+PLIST="/Library/LaunchDaemons/us.zoom.ZoomDaemon.plist"
 
-plist="/Library/LaunchDaemons/us.zoom.ZoomDaemon.plist"
-
-launchd=$(launchctl list | grep -iE wireshark)
-if [[ -n "$launchd" ]]; then
-	launchctl bootout system "$plist"
-fi    
+if launchctl list | grep -iq "zoom"; then
+    launchctl bootout system "$PLIST" || echo "Warning: Failed to bootout Zoom daemon"
+fi
 
 # remove files
-
-list=(
-"/Applications/zoom.us.app"
-"/Library/Application Support/zoom.us/"
-"/Library/LaunchDaemons/us.zoom.ZoomDaemon.plist"
-"$userHome/Library/Caches/us.zoom.xos/"
-"$userHome/Library/HTTPStorages/us.zoom.xos/"
-"$userHome/Library/Logs/zoom.us/"
+declare -a FILES_TO_REMOVE=(
+    "/Applications/zoom.us.app"
+    "/Library/Application Support/zoom.us/"
+    "/Library/LaunchDaemons/us.zoom.ZoomDaemon.plist"
+    "$userHome/Library/Caches/us.zoom.xos/"
+    "$userHome/Library/HTTPStorages/us.zoom.xos/"
+    "$userHome/Library/Logs/zoom.us/"
 )
 
-for i in "${list[@]}"; do
-        if [[ -e $i ]]; then
-                rm -rf "$i" || exit
-                echo "Removing $i .."
-        fi  
-done    
+for item in "${FILES_TO_REMOVE[@]}"; do
+    if [[ -e "$item" ]]; then
+        if rm -rf "$item"; then
+            echo "✓ Removed: $item"
+        else
+            echo "✗ Failed to remove: $item" >&2
+        fi
+    fi
+done
 
-# https://gitlab.com/wireshark/wireshark/-/issues/18734
-
-# pkgutil --forget org.wireshark.Wireshark
-# pkgutil --forget org.wireshark.ChmodBPF.pkg
-
-for i in $(/usr/sbin/pkgutil --pkgs | grep -iE zoom ); do
-        pkgutil --forget "$i"
+# forget packages
+for pkg in $(/usr/sbin/pkgutil --pkgs | grep -iE "zoom"); do
+    if pkgutil --forget "$pkg"; then
+        echo "✓ Forgot package: $pkg"
+    else
+        echo "✗ Failed to forget package: $pkg" >&2
+    fi
 done
