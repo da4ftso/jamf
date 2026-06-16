@@ -39,6 +39,9 @@ if [ "$5" == "" ] || [ "$5" == "Trash" ] ; then
  if [[ -e "$APP_NAME" ]]; then
    mv "$APP_NAME" "$userHome"/.Trash
    echo "Moved $APP_NAME to Trash..."
+ else
+   echo "$APP_NAME not found, exiting.."
+   exit 1
  fi
 fi
 
@@ -46,10 +49,10 @@ if [ "$5" == "Delete" ] || [ "$5" == "rm" ] ; then
  if [[ -e "$APP_NAME" ]]; then
    rm -Rf "$APP_NAME"
    echo "Deleted $APP_NAME ..."
+ else
+   echo "$APP_NAME not found, exiting.."
+   exit 1
  fi
 fi
-
-shopt -u nocasematch
-
 
 exit 0
