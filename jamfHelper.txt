@@ -1,4 +1,7 @@
-JAMF Helper Help Page
+Jamf Helper Help Page
+
+# Try to replace with swiftDialog !
+# https://swiftdialog.app/getting-started/introduction/
 
 Usage: jamfHelper -windowType [-windowPostion] [-title] [-heading] [-description] [-icon] [-button1] [-button2] [-defaultButton] [-cancelButton] [-showDelayOptions] [-alignDescription] [-alignHeading] [-alignCountdown] [-timeout] [-countdown] [-iconSize] [-lockHUD] [-fullScreenIcon]
 
