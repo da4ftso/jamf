@@ -2,8 +2,13 @@
 
 # variables
 
-currentUser=$(stat -f %Su "/dev/console")
-currentUserHome=$(dscl . read "/Users/$currentUser" NFSHomeDirectory | awk ' { print $NF } ')
+lastUser=$( /usr/sbin/scutil <<< "show State:/Users/ConsoleUser" | /usr/bin/awk '/Name :/ && ! /loginwindow/ { print $3 }' )
+currentUser=$(/usr/bin/stat -f%Su "/dev/console")
+userHome=$(/usr/bin/dscl . -read "/Users/$currentUser" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+
+if [ "$currentUser" == "" ] || [ "$currentUser" == "root" ]; then
+ userHome=$(/usr/bin/dscl . -read "/Users/$lastUser" NFSHomeDirectory | /usr/bin/awk ' { print $NF } ')
+fi
 
 # bootout LaunchDaemon
 
@@ -20,9 +25,9 @@ list=(
 "/Applications/zoom.us.app"
 "/Library/Application Support/zoom.us/"
 "/Library/LaunchDaemons/us.zoom.ZoomDaemon.plist"
-"$currentUserHome/Library/Caches/us.zoom.xos/"
-"$currentUserHome/Library/HTTPStorages/us.zoom.xos/"
-"$currentUserHome/Library/Logs/zoom.us/"
+"$userHome/Library/Caches/us.zoom.xos/"
+"$userHome/Library/HTTPStorages/us.zoom.xos/"
+"$userHome/Library/Logs/zoom.us/"
 )
 
 for i in "${list[@]}"; do
