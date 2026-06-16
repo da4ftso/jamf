@@ -1,7 +1,17 @@
 #!/bin/bash
 
+# remove a single .app from /Applications.
+
+# use "* App-Folder Uninstall" for anything that might also add to ~/Library or /Library
+
+# variables
+
+currentUser=$(stat -f %Su "/dev/console")
+userHome=$(dscl . read "/Users/$currentUser" NFSHomeDirectory | awk ' { print $NF } ')
+
 # param 4: app name
-# sanitize to add ".app" and correct path
+
+shopt -s nocasematch
 
 if [ "$4" == "" ]; then
   echo "No app name specified, exiting.."
@@ -23,14 +33,23 @@ fi
 
 # echo "Resolved app path: $APP_NAME"
 
-# rm
-if [[ -e "$APP_NAME" ]]; then
-	echo "Deleting: $APP_NAME"
-	rm -Rf "$APP_NAME"
-	# echo "Uninstall complete."
-else
-	echo "Warning: App not found at $APP_NAME"
-	# exit 1
+# [trash] or delete
+
+if [ "$5" == "" ] || [ "$5" == "Trash" ] ; then
+ if [[ -e "$APP_NAME" ]]; then
+   mv "$APP_NAME" "$userHome"/.Trash
+   echo "Moved $APP_NAME to Trash..."
+ fi
 fi
+
+if [ "$5" == "Delete" ] || [ "$5" == "rm" ] ; then
+ if [[ -e "$APP_NAME" ]]; then
+   rm -Rf "$APP_NAME"
+   echo "Deleted $APP_NAME ..."
+ fi
+fi
+
+shopt -u nocasematch
+
 
 exit 0
