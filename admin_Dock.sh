@@ -13,7 +13,7 @@ fi
 
 # CHECK TO SEE IF A VALUE WAS PASSED IN PARAMETER 4 AND, IF SO, ASSIGN TO "user"
 if [ "$4" != "" ] ; then
-	dpockutiluser=$4
+	user=$4
 elif
 	user=$3
 fi
