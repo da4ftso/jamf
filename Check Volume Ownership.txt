@@ -1,0 +1,11 @@
+# prettyprints GroupMembership
+
+# GroupMembership: root admin1 localuser administrator _mbsetupuser etc to
+#
+# root
+# admin1
+# localuser
+# administrator
+# _mbsetupuser 
+
+/usr/bin/dscl . -read /Groups/admin | /usr/bin/awk '/GroupMembership:/{for(i=3;i<=NF;++i)print $i}'
