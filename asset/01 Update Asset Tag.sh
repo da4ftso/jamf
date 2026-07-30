@@ -18,32 +18,7 @@ use framework "AppKit"
 use scripting additions
 
 on run
-  set buildingList to {"Albuquerque HQ - NM", ¬
-    "Chicago HQ - IL", ¬
-    "Chicago Pilsen - IL", ¬
-    "Cigna", ¬
-    "Dallas C1 - TX", ¬
-    "Danville - IL", ¬
-    "Downers Grove - IL", ¬
-    "Helena HQ - MT", ¬
-    "Houston - TX", ¬
-    "Lombard - IL", ¬
-    "Mattoon - IL", ¬
-    "Morgan Park - IL", ¬
-    "Mural Park - IL", ¬
-    "Naperville - IL", ¬
-    "Offshore", ¬
-    "Pullman - IL", ¬
-    "Quincy - IL", ¬
-    "Richardson HQ - TX", ¬
-    "Rockford - IL", ¬
-    "South Lawndale - IL", ¬
-    "Southfield - MI", ¬
-    "Springfield - IL", ¬
-    "Tulsa HQ - OK", ¬
-    "Waco - TX", ¬
-    "Washington, DC", ¬
-    "Waukegan - IL"}
+  set buildingList to {"Albuquerque HQ - NM", "Chicago HQ - IL", "Chicago Pilsen - IL", "Cigna", "Dallas C1 - TX", "Danville - IL", "Downers Grove - IL", "Helena HQ - MT", "Houston - TX", "Lombard - IL", "Mattoon - IL", "Morgan Park - IL", "Mural Park - IL", "Naperville - IL", "Offshore", "Pullman - IL", "Quincy - IL", "Richardson HQ - TX", "Rockford - IL", "South Lawndale - IL", "Southfield - MI", "Springfield - IL", "Tulsa HQ - OK", "Waco - TX", "Washington, DC", "Waukegan - IL"}
 
   set theTitle to "Asset Registration"
 
@@ -120,3 +95,4 @@ printf '%s\n' "$building"  > "/tmp/.building.txt"
 # echo " - /tmp/.assetTag.txt"
 # echo " - /tmp/.building.txt"
 # echo " - /tmp/.asset_info.env"
+
