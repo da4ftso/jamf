@@ -1,20 +1,44 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Safer, atomic writer for the AnyConnect profile
+set -euo pipefail
+IFS=$'\n\t'
 
-# cat out this VPN profile
-# instead of packaging
-
-# profile location
 profileDir="/opt/cisco/secureclient/vpn/profile"
 profile="prod-anyvpn-profile.xml"
+timestamp="$(date +%Y%m%d%H%M%S)"
+tmpfile=""
 
-if [[ -e "${profileDir}" ] ; then
-  if [[ -e "${profileDir}"/"${profile}" ]] ; then
-    mv "${profileDir}"/"${profile}" "${profileDir}"/"${profile}.bak"
+cleanup() {
+  # remove temp file if it still exists
+  if [[ -n "${tmpfile}" && -f "${tmpfile}" ]]; then
+    rm -f -- "${tmpfile}"
   fi
-# write XML
+}
+trap cleanup EXIT
 
-/bin/cat > "${profileDir}"/"${profile}" << EOF
+# must run as root to write under /opt
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "ERROR: this script must be run as root" >&2
+  exit 2
+fi
 
+# ensure directory exists and is writable
+mkdir -p -- "${profileDir}"
+if [[ ! -w "${profileDir}" ]]; then
+  echo "ERROR: ${profileDir} is not writable" >&2
+  exit 3
+fi
+
+# rotate existing file (timestamped to avoid clobbering previous backups)
+if [[ -e "${profileDir}/${profile}" ]]; then
+  mv -v -- "${profileDir}/${profile}" "${profileDir}/${profile}.bak.${timestamp}"
+fi
+
+# create a temp file in the target directory (ensures same filesystem, so mv is atomic)
+tmpfile="$(mktemp "${profileDir}/${profile}.XXXXXXXX")" || { echo "ERROR: mktemp failed" >&2; exit 4; }
+
+# Use a single-quoted here-doc to avoid accidental variable expansion
+cat > "${tmpfile}" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <AnyConnectProfile xmlns="http://schemas.xmlsoap.org/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.xmlsoap.org/encoding/ AnyConnectProfile.xsd">
 	<ClientInitialization>
@@ -76,3 +100,14 @@ if [[ -e "${profileDir}" ] ; then
 	</ServerList>
 </AnyConnectProfile>
 EOF
+
+# set safe permissions (adjust as appropriate for your environment)
+chmod 0644 -- "${tmpfile}"
+
+# move into place atomically
+mv -f -- "${tmpfile}" "${profileDir}/${profile}"
+# prevent cleanup removing the real file
+tmpfile=""
+
+echo "WROTE: ${profileDir}/${profile}"
+exit 0
