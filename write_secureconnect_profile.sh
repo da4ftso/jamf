@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 profileDir="/opt/cisco/secureclient/vpn/profile"
-profile="prod-anyvpn-profile.xml"
+profile="PROFILE_NAME.xml"
 timestamp="$(date +%Y%m%d%H%M%S)"
 tmpfile=""
 
