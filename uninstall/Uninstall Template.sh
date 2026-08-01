@@ -1,6 +1,8 @@
 #!/bin/bash
 # set env pipefail here?
 
+# dupe of the other template?
+
 # Remove files and directories
 files_to_remove=(
 	"APP"
