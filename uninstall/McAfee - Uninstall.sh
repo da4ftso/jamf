@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
-## HEADER
-
-
-## DEFINITIONS
-
+# no idea who originated this, prob 2020 or 2021, def not my style
 
 ## FUNCTIONS
 
