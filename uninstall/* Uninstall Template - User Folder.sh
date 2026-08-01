@@ -1,6 +1,11 @@
 #!/bin/bash
 # set env pipefail here?
 
+# consolidate all of these into a single jamf script that will take params:
+#  app only
+#  Library subfolders
+#  receipts
+
 # variables
 
 lastUser=$( /usr/sbin/scutil <<< "show State:/Users/ConsoleUser" | /usr/bin/awk '/Name :/ && ! /loginwindow/ { print $3 }' )
