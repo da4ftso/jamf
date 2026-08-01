@@ -1,6 +1,5 @@
 #!/bin/sh
-#
-#
+
 # Created by John Mahlman, University of the Arts Philadelphia (jmahlman@uarts.edu)
 # Name: Adobe-RUMWithProgress
 #
