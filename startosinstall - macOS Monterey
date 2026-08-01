@@ -1,7 +1,0 @@
-#!/bin/zsh
-
-echo "Running startosinstall..."
-
-'/Applications/Install macOS Monterey beta.app/Contents/Resources/startosinstall' --agreetolicense --forcequitapps &
-
-exit $?
