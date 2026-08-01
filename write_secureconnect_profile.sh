@@ -68,8 +68,8 @@ cat > "${tmpfile}" <<'EOF'
 		<WindowsVPNEstablishment>LocalUsersOnly</WindowsVPNEstablishment>
 		<LinuxVPNEstablishment>LocalUsersOnly</LinuxVPNEstablishment>
 		<AutomaticVPNPolicy>true
-			<TrustedDNSDomains>hcscint.net,fyiblue.com,adhcscint.net,prd.hcscad.net</TrustedDNSDomains>
-			<TrustedDNSServers>10.139.244.35,10.69.244.35</TrustedDNSServers>
+			<TrustedDNSDomains>DOMAINS_GO_HERE</TrustedDNSDomains>
+				<TrustedDNSServers>DNS_SERVERS_GO_HERE</TrustedDNSServers>
 			<TrustedNetworkPolicy>Disconnect</TrustedNetworkPolicy>
 			<UntrustedNetworkPolicy>DoNothing</UntrustedNetworkPolicy>
 			<BypassConnectUponSessionTimeout>false</BypassConnectUponSessionTimeout>
@@ -93,9 +93,9 @@ cat > "${tmpfile}" <<'EOF'
 	</ClientInitialization>
 	<ServerList>
 		<HostEntry>
-			<HostName>HCSC_AnyplaceVPN</HostName>
-			<HostAddress>anyplacevpn.hcsc.net</HostAddress>
-			<UserGroup>prd-anyvpn</UserGroup>
+			<HostName>VPN_NAME_GO_HERE</HostName>
+			<HostAddress>VPN_ADDRESS_GO_HERE</HostAddress>
+			<UserGroup>GROUP_GO_HERE/UserGroup>
 		</HostEntry>
 	</ServerList>
 </AnyConnectProfile>
