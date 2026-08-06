@@ -2,7 +2,6 @@
 
 # 'Swift Default Apps' Outlook Handlers
 # https://github.com/Lord-Kamina/SwiftDefaultApps
-#!/bin/bash
 
 # Set Outlook as handlers (runs in the currently logged-in user's environment)
 currentUser=$(stat -f %Su /dev/console)
