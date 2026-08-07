@@ -1,84 +1,96 @@
 #!/bin/bash
+# Installs a LaunchDaemon that runs a Jamf inventory update at boot.
+# Improvements: strict mode, root check, cleanup trap, safer install, logging,
+# and handling of existing LaunchDaemon.
 
-# Script which installs a LaunchDaemon which runs a Jamf inventory update at startup time.
-#
-# The LaunchDaemon takes the following actions:
-#
-# * Verifies that the Mac can communicate with the Jamf Pro server.
-# * Sends an updated inventory to the Jamf Pro server
-#
-# Create the jamf_inventory_update_at_boot LaunchDaemon by using cat input redirection
-# to write the XML contained below to a new file.
-#
-# The LaunchDaemon will run when when loaded and also when the Mac boots up.
+set -euo pipefail
 
-# Set the identifier for the LaunchDaemon
-
-LaunchDaemonName="com.github.runjamfproinventoryupdate"
- 
-# Set exit code
+readonly LaunchDaemonName="com.github.runjamfproinventoryupdate"
+readonly JAMF_BIN="/usr/local/jamf/bin/jamf"
+readonly PLIST_DEST="/Library/LaunchDaemons/${LaunchDaemonName}.plist"
+readonly LOG_PATH="/var/log/${LaunchDaemonName}.log"
 
 ERROR=0
 
-# Create temp directory to store LaunchDaemon file inside at file creation time.
- 
-temp_directory=$(mktemp -d)
+log() { printf '%s\n' "$*"; }
+die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
-# Create the LaunchDaemon file
+# Must be run as root
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  die "This script must be run as root (use sudo)."
+fi
 
-/bin/cat > "$temp_directory/$LaunchDaemonName.plist" << JAMF_PRO_INVENTORY_UPDATE_LAUNCHDAEMON
+# Validate jamf binary exists and is executable
+if [[ ! -x "$JAMF_BIN" ]]; then
+  die "Jamf binary not found at $JAMF_BIN. Install Jamf or adjust JAMF_BIN."
+fi
+
+# Create temp directory and ensure cleanup on exit
+temp_directory=$(mktemp -d) || die "Failed to create temp directory."
+trap 'rm -rf "$temp_directory"' EXIT
+
+plist_temp="$temp_directory/${LaunchDaemonName}.plist"
+
+# Create the plist. Use StandardOutPath/StandardErrorPath to capture output.
+cat > "$plist_temp" <<PLIST_EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Label</key>
-	<string>$LaunchDaemonName</string>
-	<key>ProgramArguments</key>
-	<array>
-		<string>sh</string>
-		<string>-c</string>
-		<string>/usr/local/jamf/bin/jamf checkJSSConnection -retry 30 && /usr/local/jamf/bin/jamf recon</string>
-	</array>
-	<key>RunAtLoad</key>
-	<true/>
+  <key>Label</key>
+  <string>${LaunchDaemonName}</string>
+
+  <!-- Using sh -c to allow check-then-run logic. For more complex logic, create a wrapper script and call it directly. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>"${JAMF_BIN} checkJSSConnection -retry 30 && ${JAMF_BIN} recon"</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Capture stdout/stderr -->
+  <key>StandardOutPath</key>
+  <string>${LOG_PATH}</string>
+  <key>StandardErrorPath</key>
+  <string>${LOG_PATH}</string>
 </dict>
 </plist>
-JAMF_PRO_INVENTORY_UPDATE_LAUNCHDAEMON
- 
-# Once the LaunchDaemon file has been created, fix the permissions
-# so that the file is owned by root:wheel and set to not be executable
-# After the permissions have been updated, move the LaunchDaemon into 
-# place in /Library/LaunchDaemons.
- 
-/usr/sbin/chown root:wheel "${temp_directory}/${LaunchDaemonName}.plist"
-/bin/chmod 644 "${temp_directory}/${LaunchDaemonName}.plist"
-/bin/chmod a-x "${temp_directory}/${LaunchDaemonName}.plist"
-/bin/mv "${temp_directory}/${LaunchDaemonName}.plist" "/Library/LaunchDaemons/${LaunchDaemonName}.plist"
- 
-# After the LaunchDaemon is place with proper permissions, load the LaunchDaemon.
-# Loading the launchdaemon will trigger an Jamf Pro inventory update to be run.
+PLIST_EOF
 
-if [[ -f "/Library/LaunchDaemons/${LaunchDaemonName}.plist" ]]; then 
-   /bin/launchctl bootstrap system "/Library/LaunchDaemons/${LaunchDaemonName}.plist" 
+# Use install to set owner & mode atomically; prepare for replacement if needed.
+if /bin/ls "$PLIST_DEST" >/dev/null 2>&1; then
+  log "Existing plist found at ${PLIST_DEST}; attempting to unload it first..."
+  if /bin/launchctl print "system/${LaunchDaemonName}" >/dev/null 2>&1; then
+    /bin/launchctl bootout system "$PLIST_DEST" >/dev/null 2>&1 || log "launchctl bootout failed (continuing)"
+  else
+    /bin/launchctl remove "${LaunchDaemonName}" >/dev/null 2>&1 || true
+  fi
 fi
 
-# Remove temp directory
+# Install the new plist with proper owner/permissions
+/usr/bin/install -o root -g wheel -m 0644 "$plist_temp" "$PLIST_DEST"
 
-/bin/rm -rf "$temp_directory"
+# Ensure log file exists and is writable by root
+: > "$LOG_PATH" || die "Cannot create log file at $LOG_PATH"
+/usr/sbin/chown root:wheel "$LOG_PATH"
+/usr/bin/chmod 0640 "$LOG_PATH"
 
-if [[ -f "/Library/LaunchDaemons/${LaunchDaemonName}.plist" ]]; then
-
-   LaunchDaemonLoaded=$(/bin/launchctl list | grep -o "$LaunchDaemonName")
-
-   if [[ -n "$LaunchDaemonLoaded" ]]; then
-      echo "$LaunchDaemonName LaunchDaemon is loaded. Jamf Pro inventory updates will run when the Mac boots."
-   else
-      echo "ERROR: $LaunchDaemonName LaunchDaemon is not loaded."
-      ERROR=1
-   fi
+# Load the LaunchDaemon
+log "Bootstrapping LaunchDaemon..."
+if /bin/launchctl bootstrap system "$PLIST_DEST"; then
+  log "LaunchDaemon bootstrapped."
 else
-   echo "ERROR: $LaunchDaemonName.plist LaunchDaemon file was not created successfully."
-   ERROR=1
+  /bin/launchctl print "system/${LaunchDaemonName}" >/dev/null 2>&1 || log "launchctl print failed or daemon not present."
+fi
+
+# Verify the LaunchDaemon is loaded
+if /bin/launchctl print "system/${LaunchDaemonName}" >/dev/null 2>&1; then
+  log "${LaunchDaemonName} LaunchDaemon is loaded. Jamf inventory updates will run at boot. Logs: ${LOG_PATH}"
+else
+  die "${LaunchDaemonName} LaunchDaemon is not loaded after bootstrap."
 fi
 
 exit "$ERROR"
