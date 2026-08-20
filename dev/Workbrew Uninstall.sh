@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# 1.0 uninstall Workbrew 
+# 1.0.1 uninstall Workbrew
 # https://workbrew.com/docs/decommission-a-device-or-move-it-to-another-workspace
 
 # default output says /opt/workbrew/home will not be deleted, but it gets deleted
-# in fact all of /opt/workbrew/ is deleted (as per the docs)
+# in fact all of /opt/workbrew/ is deleted, as per the docs
+
+# if then
 
 if [[ -x /opt/workbrew/sbin/uninstall ]]; then
 
@@ -15,6 +17,13 @@ else
   echo "Unable to run Workbrew uninstall, exiting.."
   exit 1
 
+fi
+
+if pgrep -x "Workbrew" >/dev/null; then
+
+  osascript -e 'tell application "Workbrew" to quit' >/dev/null 2>&1
+  sleep 5
+  
 fi
 
 if [[ -e /Applications/Workbrew.app ]]; then
