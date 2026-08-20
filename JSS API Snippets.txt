@@ -2,11 +2,12 @@
 
 ## variables
 
+# read JSS URL from plist
 jamf_URL=$(/usr/bin/defaults read "/Library/Preferences/com.jamfsoftware.jamf.plist" jss_url)
 jamf_URL_bare=$( /usr/bin/defaults read /Library/Preferences/com.jamfsoftware.jamf.plist jss_url | sed -e 's/https:\/\///' -e 's/\/.*//' -e 's/:.*//' )  # no http*, no /, no:8443
 jamf_URL=${jamf_URL%%/}  # remove trailing slash
-
 echo "$jamf_URL"
+
 apiuser="yourapiuser"
 apipass="yourapiuserpass"
 
@@ -25,8 +26,6 @@ NAME=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/location/username/
 TAG=$(echo "$RESPONSE" | xmllint --format --xpath '/computer/general/asset_tag/text()' -)
 
 echo "Grabbed $NAME ; $BUILDING ; $DEPT ; $ROOM ; $TAG"
-
-
 
 serial=$(/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice | /usr/bin/awk -F'"' '/IOPlatformSerialNumber/{print $4}')
 
