@@ -2,7 +2,7 @@
 
 OnNetwork=0
 
-if ifconfig | grep -E 'inet 10.' >/dev/null; then
+if ifconfig | awk '/inet / && $2 ~ /^10\./ { found=1 } END { exit !found }'; then
     OnNetwork=1
 fi
 
