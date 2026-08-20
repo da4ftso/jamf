@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# 1.2 260428 PWC
+# 1.2 260428
 # better error handling
 # support for nvm-installed Node.js
 
