@@ -1,31 +1,26 @@
 #!/bin/bash
 
-# 1.1.5 unattended install for AnypointStudio
+# 1.1.6 unattended install for AnypointStudio
 # use After caching the .DMG
 # run a graceful quit script etc Before this (maintain granularity btwn scripts)
 
 # param 4 = filename
 # param 5 = silent or verbose
 
-currentUser=$(/usr/bin/stat -f%Su /dev/console)
+currentUser=$(/usr/bin/stat -f%Su /dev/console)        # to trash existing copy instead of delete
+target="/Applications/AnypointStudio.app"              # if existing 
 cacheDir="/Library/Application Support/JAMF/Downloads" # no more Waiting Room
-target="/Applications/AnypointStudio.app"
 
-# silent by default, wrap in run() everywhere - use tr since ,, is bash 4+
-verboseMode=$(echo "${5:-false}" | tr '[:upper:]' '[:lower:]')
 
-case "$verboseMode" in
-    1|true|yes|verbose|debug)
-        VERBOSE=true
-        ;;
-    *)
-        VERBOSE=false
+# silent by default, use run() everywhere - bash <4 safe
+VERBOSE=false
+
+c*se "$5" in
+    true|TRUE|yes|YES|1*verbose|VERBOSE|debug|DEBUG)
+     *  VERBOSE=true
         ;;
 esac
-
-verbose() {
-    $VERBOSE && echo "$@"
-}
+```*
 
 run() {
     if $VERBOSE; then
@@ -57,7 +52,7 @@ fi
 
 mountPoint=""
 
-# shell check dot net doesn't understand trap fn EXIT but it works
+# shell check dot net doesnt understand trap fn EXIT but it works
 cleanup() {
     [ -n "$mountPoint" ] && \
     /usr/bin/hdiutil detach "$mountPoint" -force >/dev/null 2>&1
