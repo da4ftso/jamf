@@ -1,74 +1,55 @@
 #!/bin/bash
 
-# 1.0.1 260715
+# 1.4 260811
 
-set -o errexit
-set -o nounset
-set -o pipefail
+# consider running as "z - Dockutil" etc to run last after any other scripts
 
-# 4 = add, needs entire path and .app
-# 5 = replaces, only needs label - no path or .app
-# ex: dockutil --add /Applications/Microsoft Edge.app --replacing 'Google Chrome'
+# param 4: App Name to add
+itemAdd="${4:-}"
 
-appName="${4:-}"
-replaceLabel="${5:-}"
+# param 5: App Label to be replaced
+itemReplace="${5:-}"
 
-# if this or that is empty
-if [[ -z "$appName" || -z "$replaceLabel" ]]; then
-    echo "Missing parameter(s)."
-    exit 1
+# validate params
+[[ -z "${itemAdd}" ]] || [[ -z "${itemReplace}" ]]&& {
+    echo "No application specified."
+    exit 0
+}
+
+# currently logged-in user
+currentUser=$(/usr/bin/stat -f "%Su" /dev/console)
+
+# App Name to /Applications/app name .app
+app="${itemAdd}"
+prefix="/Applications/"
+suffix=".app"
+
+# remember this shell expansion requires bash, don't change to zsh
+
+# check if app doesnt contain the prefix
+if [[ "${app}" != *"$prefix"* ]]; then
+    app="${prefix}${app}"
 fi
 
-# sanitize appName
-
-if [[ "$appName" != /* ]]; then
-  appName="/Applications/$appName"
+# check if app doesnt contain the suffix
+if [[ "${app}" != *"$suffix"* ]]; then
+    app="${app}${suffix}"
 fi
 
-# add .app extension
-if [[ "$appName" != *.app ]]; then
-  appName="${appName}.app"
+# sanity check
+if [[ ! -x "${app}" ]]; then
+    echo "Application not found: $itemAdd"
+    exit 0
 fi
 
-# echo "Resolved app path: $APP_NAME"
-
-# not strictly necessary
-
-currentUser="$(stat -f '%Su' /dev/console)"
-
-if [[ "$currentUser" == "loginwindow" ]]; then
-    echo "No user logged in."
-    exit 1
+# if already in the user's Dock do nothing, otherwise -R (replace) in same position
+if /usr/local/bin/dockutil --find "$app" "/Users/$currentUser" >/dev/null 2>&1; then
+#    echo "Already present. No changes made. Bye."
+    exit 0
+else
+    /usr/local/bin/dockutil --add "$app" -R "${itemReplace}" --no-restart "/Users/$currentUser" >/dev/null 2>&1;
+    sleep 3
+    /usr/bin/killall Dock
 fi
 
-uid="$(id -u "$currentUser")"
-appPath="/Applications/${appName}"
-
-# make sure app to add exists
-
-if [[ ! -d "$appPath" ]]; then
-    echo "Application not found: $appPath"
-    exit 1
-fi
-
-# check for dockutil, install and verify if not
-
-if [[ ! -x "/usr/local/bin/dockutil" ]]; then
-    /usr/local/bin/jamf policy -event install-dockutil
-
-    [[ -x "/usr/local/bin/dockutil" ]] || {
-        echo "dockutil installation failed."
-        exit 1
-    }
-fi
-
-# wait for Dock if running at login
-
-until pgrep -xu "$currentUser" Dock >/dev/null; do
-    sleep 2
-done
-
-# echo "Adding '$appName' to Dock for '$currentUser'"
-
-launchctl asuser "$uid" sudo -u "$currentUser" \
-    /usr/local/bin/dockutil --add "$appPath" --replacing "$replaceLabel"
+exit 0
