@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Dock item label to remove
+# 1.1 250517
+# can we get App Label out of actual .app etc?
+
+# consider running as "x - Docktuil" etc to ensure running last after other scripts
+
+# App Label to remove (not path or filename)
 item="$4"
 
 # Determine the currently logged-in user
