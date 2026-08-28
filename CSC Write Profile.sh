@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 # 1.1.2 260827
-
-set -euo pipefail
-IFS=$'\n\t'
+# Cisco Secure Client - Write Profile.sh
 
 # $4 = Profile URL ("vpn.corporate.net") - will convert a / to - in filename and add .xml
 # $5 = Profile Display Name ("Corporate_VPN")
+
+set -euo pipefail
+IFS=$'\n\t'
 
 # validate parameters
 [[ -z "${4:-}" ]] && {
