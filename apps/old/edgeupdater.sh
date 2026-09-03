@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # EdgeUpdater-Cleanup-1.0.1
-# 250402 PWC
+# 250402
+
+# a few builds of Edge left huge tmp files buried in /Library
+# you probably don't need thius anymore either
 
 updateDir="/Library/Application Support/Microsoft/EdgeUpdater/apps"
 
