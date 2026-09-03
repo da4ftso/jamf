@@ -1,6 +1,11 @@
 #!/bin/bash
 
-## Quit OneDrive if it cannot establish a sync connection
+##
+## use "OneDrive By IP.sh" instead
+##
+
+# quit OneDrive if it cannot establish a sync connection
+
 
 CONSOLE_USER=$(stat -f "%Su" /dev/console)
 CONSOLE_UID=$(id -u "${CONSOLE_USER}")
