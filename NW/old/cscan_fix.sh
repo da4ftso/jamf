@@ -1,6 +1,11 @@
 #!/bin/bash
 set -x
 
+# an old combo of Cisco SecureClient (or AC?) and some macOS
+# resulted in systems nearly hanging due to "cscan' zombie process
+
+# shouldn't be necessary anymore but hey
+
 PARENT_PID=$(pgrep -f "cscan")
 
 if [ -z "$PARENT_PID" ]; then
