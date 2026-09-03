@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# use the current MOFA version instead:
+# https://github.com/cocopuff2u/MOFA/blob/main/office_reset_tools/mofa_community_maintained/scripts/MOFA_Community_Microsoft_Teams_Reset.zsh
+
 autoload is-at-least
 APP_NAME="Microsoft Teams (work or school)"
 
