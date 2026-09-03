@@ -2,7 +2,7 @@
 
 # remove a single .app from /Applications.
 
-# use "* App-Folder Uninstall" for anything that might also add to ~/Library or /Library
+# use "* Uninstall Template - User Folder.sh" for anything that might also add to ~/Library or /Library
 
 # variables
 
