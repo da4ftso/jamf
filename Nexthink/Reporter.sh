@@ -2,8 +2,9 @@
 # set -x
 
 # 1.1 231116 PWC
-# unload Nexthink's plists, change to trace, reload, run reporter
+# unload Nexthink's plists, change to trace, reload, run Reporter
 
+# TO-DO: take IP, u/p from params and use as upload destination for report?
 
 # variables
 currentUser=$(stat -f %Su "/dev/console")
