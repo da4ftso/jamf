@@ -10,7 +10,7 @@ policiesToRun=(
 "install-homebrew-pkg"
 "install-edge"
 "install-iterm2"
-"install-jsp-2"
+"install-jssp"
 "install-mswinapp"
 "install-nexthink"
 "install-onedrive-beta"
