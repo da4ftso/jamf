@@ -1,6 +1,8 @@
 #!/bin/bash
 # set env pipefail here?
 
+# THIS IS NOT AN OPERABLE SCRIPT AS-IS
+
 # consolidate all of these into a single jamf script that will take params:
 #  app only
 #  Library subfolders
