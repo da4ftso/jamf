@@ -12,4 +12,6 @@
 
 /usr/sbin/systemsetup -setremotelogin on
 
+/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -configure -computerinfo  -set1 -1 $NAME
+
 exit 0
