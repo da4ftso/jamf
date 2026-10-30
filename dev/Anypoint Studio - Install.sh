@@ -1,37 +1,22 @@
 #!/bin/bash
 
-# 1.1.6 unattended install for AnypointStudio
+# 1.1.8 unattended install for AnypointStudio
 # use After caching the .DMG
 # run a graceful quit script etc Before this (maintain granularity btwn scripts)
 
 # param 4 = filename
+
 # param 5 = silent or verbose
+if [[ "${5,,}" == "yes" || "${5,,}" == "verbose" ]]; then
+    set -x
+fi
 
 currentUser=$(/usr/bin/stat -f%Su /dev/console)        # to trash existing copy instead of delete
 target="/Applications/AnypointStudio.app"              # if existing 
-cacheDir="/Library/Application Support/JAMF/Downloads" # no more Waiting Room
+cacheDir="/Library/Application Support/JAMF/Waiting Room" # no more Downloads
 
-
-# silent by default, use run() everywhere - bash <4 safe
-VERBOSE=false
-
-c*se "$5" in
-    true|TRUE|yes|YES|1*verbose|VERBOSE|debug|DEBUG)
-     *  VERBOSE=true
-        ;;
-esac
-```*
-
-run() {
-    if $VERBOSE; then
-        "$@"
-    else
-        "$@" >/dev/null 2>&1
-    fi
-}
 
 # installer DMG passed via Jamf parameter 4
-
 file="$4"
  
 if [ $4 == "" ]; then
@@ -61,7 +46,7 @@ cleanup() {
 trap cleanup EXIT
 
 # /usr/bin/hdiutil -nobrowse -quiet attach "$dmgPath" >/dev/null 2>&1
-run /usr/sbin/diskutil image attach -b "$dmgPath"
+/usr/sbin/diskutil image attach -b "$dmgPath"
 
 mountPoint="/Volumes/AnypointStudio" # assuming this stays consistent over new releases
 
@@ -76,7 +61,8 @@ if [ -x  "$target" ]; then
 fi
 
 # not really an install, just a copy - remember we can't use cp or ditto due to translocation bug 
-run rsync -avhPrq "$mountPoint"/*.app /Applications/
+rsync -avhPrq "$mountPoint"/*.app /Applications/ 
+sleep 10
 
 rm -f "$dmgPath"
 
