@@ -1,25 +1,42 @@
 #!/bin/bash
+
 set -euo pipefail
 
 # Exports bookmarks from Chrome, Edge, and Safari to the user's OneDrive folder
-# Based on the original Chrome bookmarks exporter
+
+# Get current logged-in user and home folder
+loggedInUser=$(/usr/bin/stat -f "%Su" /dev/console)
+
+if [[ -z "$loggedInUser" || "$loggedInUser" == "root" || "$loggedInUser" == "loginwindow" ]]; then
+    echo "ERROR: No user is currently logged in."
+    exit 0
+fi
+
+userHome=$(/usr/bin/dscl . -read "/Users/$loggedInUser" NFSHomeDirectory 2>/dev/null | /usr/bin/awk '{print $2}')
+
+if [[ -z "$userHome" || ! -d "$userHome" ]]; then
+    echo "ERROR: Unable to determine home folder for $loggedInUser."
+    exit 1
+fi
 
 # OneDrive path for current user
-ONEDRIVE_PATH="$HOME/Library/CloudStorage/OneDrive-Personal"
+ONEDRIVE_PATH="$userHome/Library/CloudStorage/OneDrive-HealthCareServiceCorporation"
+
 if [[ ! -d "$ONEDRIVE_PATH" ]]; then
     # Try alternative OneDrive location
-    ONEDRIVE_PATH="$HOME/OneDrive"
+    ONEDRIVE_PATH="$userHome/OneDrive"
+
     if [[ ! -d "$ONEDRIVE_PATH" ]]; then
         echo "ERROR: OneDrive folder not found."
-        echo "Checked: $HOME/Library/CloudStorage/OneDrive-Personal and $HOME/OneDrive"
+        echo "Checked: $userHome/OneDrive"
         exit 1
     fi
 fi
 
 # Define bookmark sources for each browser
-CHROME_BOOKMARKS="$HOME/Library/Application Support/Google/Chrome/Default/Bookmarks"
-EDGE_BOOKMARKS="$HOME/Library/Application Support/Microsoft Edge/Default/Bookmarks"
-SAFARI_BOOKMARKS="$HOME/Library/Safari/Bookmarks.plist"
+CHROME_BOOKMARKS="$userHome/Library/Application Support/Google/Chrome/Default/Bookmarks"
+EDGE_BOOKMARKS="$userHome/Library/Application Support/Microsoft Edge/Default/Bookmarks"
+SAFARI_BOOKMARKS="$userHome/Library/Safari/Bookmarks.plist"
 
 # Define output paths
 CHROME_OUTPUT="$ONEDRIVE_PATH/chrome_bookmarks_$(date +%Y%m%d_%H%M%S).html"
@@ -31,16 +48,16 @@ export_json_bookmarks() {
     local BOOKMARKS_FILE="$1"
     local OUTPUT_FILE="$2"
     local BROWSER_NAME="$3"
-    
+
     if [[ ! -f "$BOOKMARKS_FILE" ]]; then
         echo "WARNING: $BROWSER_NAME bookmarks file not found at $BOOKMARKS_FILE"
         return 1
     fi
-    
-    echo "Exporting $BROWSER_NAME bookmarks…"
+
+    echo "Exporting $BROWSER_NAME bookmarks..."
     echo "Source: $BOOKMARKS_FILE"
     echo "Output: $OUTPUT_FILE"
-    
+
     python3 <<EOF
 import json
 import html
@@ -72,8 +89,9 @@ out.write("""<!DOCTYPE NETSCAPE-Bookmark-file-1>
 def write_folder(node, indent=1):
     pad = "    " * indent
     name = html.escape(node.get("name", ""))
-    out.write(f'{pad}<DT><H3>{name}</H3>\n')
-    out.write(f'{pad}<DL><p>\n')
+
+    out.write(f'{pad}<DT><H3>{name}</H3>\\n')
+    out.write(f'{pad}<DL><p>\\n')
 
     for child in node.get("children", []):
         if child["type"] == "folder":
@@ -81,20 +99,22 @@ def write_folder(node, indent=1):
         elif child["type"] == "url":
             url = html.escape(child["url"])
             title = html.escape(child.get("name", url))
-            out.write(f'{pad}    <DT><A HREF="{url}">{title}</A>\n')
+            out.write(f'{pad}    <DT><A HREF="{url}">{title}</A>\\n')
 
-    out.write(f'{pad}</DL><p>\n')
+    out.write(f'{pad}</DL><p>\\n')
 
 # Chrome and Edge roots: bookmark_bar, other, synced
 roots = data["roots"]
 
 for root_name in ("bookmark_bar", "other", "synced"):
     root = roots.get(root_name)
+
     if root and root.get("children"):
         write_folder(root)
 
-out.write("</DL><p>\n")
+out.write("</DL><p>\\n")
 out.close()
+
 print(f"Successfully exported to {OUTPUT_FILE}")
 EOF
 }
@@ -103,16 +123,16 @@ EOF
 export_safari_bookmarks() {
     local BOOKMARKS_FILE="$1"
     local OUTPUT_FILE="$2"
-    
+
     if [[ ! -f "$BOOKMARKS_FILE" ]]; then
         echo "WARNING: Safari bookmarks file not found at $BOOKMARKS_FILE"
         return 1
     fi
-    
-    echo "Exporting Safari bookmarks…"
+
+    echo "Exporting Safari bookmarks..."
     echo "Source: $BOOKMARKS_FILE"
     echo "Output: $OUTPUT_FILE"
-    
+
     python3 <<EOF
 import plistlib
 import html
@@ -142,18 +162,18 @@ out.write("""<!DOCTYPE NETSCAPE-Bookmark-file-1>
 
 def write_safari_folder(node, indent=1):
     pad = "    " * indent
-    
+
     if isinstance(node, dict):
         # This is a folder
         title = node.get("Title", "Untitled")
-        out.write(f'{pad}<DT><H3>{html.escape(title)}</H3>\n')
-        out.write(f'{pad}<DL><p>\n')
-        
+        out.write(f'{pad}<DT><H3>{html.escape(title)}</H3>\\n')
+        out.write(f'{pad}<DL><p>\\n')
+
         if "Children" in node:
             for child in node["Children"]:
                 write_safari_folder(child, indent + 1)
-        
-        out.write(f'{pad}</DL><p>\n')
+
+        out.write(f'{pad}</DL><p>\\n')
 
 # Process Safari bookmarks
 if "Children" in data:
@@ -164,35 +184,32 @@ if "Children" in data:
             elif child["WebBookmarkType"] == "WebBookmarkTypeLeaf":
                 url = child.get("URLString", "")
                 title = child.get("Title", url)
-                if url:
-                    out.write(f'    <DT><A HREF="{html.escape(url)}">{html.escape(title)}</A>\n')
 
-out.write("</DL><p>\n")
+                if url:
+                    out.write(
+                        f'    <DT><A HREF="{html.escape(url)}">'
+                        f'{html.escape(title)}</A>\\n'
+                    )
+
+out.write("</DL><p>\\n")
 out.close()
+
 print(f"Successfully exported to {OUTPUT_FILE}")
 EOF
 }
 
-# Main execution
-echo "======================================"
-echo "Browser Bookmarks Exporter"
-echo "OneDrive Path: $ONEDRIVE_PATH"
-echo "======================================"
-echo ""
-
 # Export Chrome bookmarks
 export_json_bookmarks "$CHROME_BOOKMARKS" "$CHROME_OUTPUT" "Chrome" || echo "Chrome export skipped"
+
 echo ""
 
 # Export Edge bookmarks
 export_json_bookmarks "$EDGE_BOOKMARKS" "$EDGE_OUTPUT" "Edge" || echo "Edge export skipped"
+
 echo ""
 
 # Export Safari bookmarks
 export_safari_bookmarks "$SAFARI_BOOKMARKS" "$SAFARI_OUTPUT" || echo "Safari export skipped"
-echo ""
 
-echo "======================================"
-echo "All exports complete!"
+echo ""
 echo "Files saved to: $ONEDRIVE_PATH"
-echo "======================================"
