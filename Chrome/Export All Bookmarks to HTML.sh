@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-# Exports bookmarks from Chrome, Edge, and Safari to the user's OneDrive folder
+# 1.4.1 261120 better Safari handling, falls back to Desktop if OD not found
 
-# Get current logged-in user and home folder
+# current logged-in user and home folder
 loggedInUser=$(/usr/bin/stat -f "%Su" /dev/console)
 
 if [[ -z "$loggedInUser" || "$loggedInUser" == "root" || "$loggedInUser" == "loginwindow" ]]; then
@@ -23,27 +23,27 @@ fi
 ONEDRIVE_PATH="$userHome/Library/CloudStorage/OneDrive-HealthCareServiceCorporation"
 
 if [[ ! -d "$ONEDRIVE_PATH" ]]; then
-    # Try alternative OneDrive location
+    # alternative location
     ONEDRIVE_PATH="$userHome/OneDrive"
 
     if [[ ! -d "$ONEDRIVE_PATH" ]]; then
-        echo "ERROR: OneDrive folder not found."
-        echo "Checked: $userHome/OneDrive"
-        exit 1
+        echo "WARNING: OneDrive folder not found."
+        echo "Falling back to: $userHome/Desktop"
+        ONEDRIVE_PATH="$userHome/Desktop"
     fi
 fi
 
-# Define bookmark sources for each browser
+# sources
 CHROME_BOOKMARKS="$userHome/Library/Application Support/Google/Chrome/Default/Bookmarks"
 EDGE_BOOKMARKS="$userHome/Library/Application Support/Microsoft Edge/Default/Bookmarks"
 SAFARI_BOOKMARKS="$userHome/Library/Safari/Bookmarks.plist"
 
-# Define output paths
+# outputs
 CHROME_OUTPUT="$ONEDRIVE_PATH/chrome_bookmarks_$(date +%Y%m%d_%H%M%S).html"
 EDGE_OUTPUT="$ONEDRIVE_PATH/edge_bookmarks_$(date +%Y%m%d_%H%M%S).html"
 SAFARI_OUTPUT="$ONEDRIVE_PATH/safari_bookmarks_$(date +%Y%m%d_%H%M%S).html"
 
-# Function to export Chrome-like bookmarks (JSON format)
+# export to JSON
 export_json_bookmarks() {
     local BOOKMARKS_FILE="$1"
     local OUTPUT_FILE="$2"
@@ -119,7 +119,7 @@ print(f"Successfully exported to {OUTPUT_FILE}")
 EOF
 }
 
-# Function to export Safari bookmarks
+# export Safari
 export_safari_bookmarks() {
     local BOOKMARKS_FILE="$1"
     local OUTPUT_FILE="$2"
@@ -160,36 +160,47 @@ out.write("""<!DOCTYPE NETSCAPE-Bookmark-file-1>
 <DL><p>
 """)
 
-def write_safari_folder(node, indent=1):
+def write_safari_node(node, indent=1):
     pad = "    " * indent
 
-    if isinstance(node, dict):
-        # This is a folder
-        title = node.get("Title", "Untitled")
+    if not isinstance(node, dict):
+        return
+
+    bookmark_type = node.get("WebBookmarkType")
+
+    if bookmark_type == "WebBookmarkTypeLeaf":
+        url = node.get("URLString", "")
+        title = node.get("URIDictionary", {}).get("title") or node.get("Title") or url
+
+        if url:
+            out.write(
+                f'{pad}<DT><A HREF="{html.escape(url)}">'
+                f'{html.escape(title)}</A>\\n'
+            )
+        return
+
+    if bookmark_type == "WebBookmarkTypeList":
+        children = node.get("Children", [])
+        title = node.get("Title")
+
+        # Skip Safari's unnamed internal containers while retaining their contents
+        if not title:
+            for child in children:
+                write_safari_node(child, indent)
+            return
+
         out.write(f'{pad}<DT><H3>{html.escape(title)}</H3>\\n')
         out.write(f'{pad}<DL><p>\\n')
 
-        if "Children" in node:
-            for child in node["Children"]:
-                write_safari_folder(child, indent + 1)
+        for child in children:
+            write_safari_node(child, indent + 1)
 
         out.write(f'{pad}</DL><p>\\n')
 
 # Process Safari bookmarks
 if "Children" in data:
     for child in data["Children"]:
-        if "WebBookmarkType" in child:
-            if child["WebBookmarkType"] == "WebBookmarkTypeList":
-                write_safari_folder(child)
-            elif child["WebBookmarkType"] == "WebBookmarkTypeLeaf":
-                url = child.get("URLString", "")
-                title = child.get("Title", url)
-
-                if url:
-                    out.write(
-                        f'    <DT><A HREF="{html.escape(url)}">'
-                        f'{html.escape(title)}</A>\\n'
-                    )
+        write_safari_node(child)
 
 out.write("</DL><p>\\n")
 out.close()
@@ -198,18 +209,11 @@ print(f"Successfully exported to {OUTPUT_FILE}")
 EOF
 }
 
-# Export Chrome bookmarks
+# export
 export_json_bookmarks "$CHROME_BOOKMARKS" "$CHROME_OUTPUT" "Chrome" || echo "Chrome export skipped"
-
 echo ""
-
-# Export Edge bookmarks
 export_json_bookmarks "$EDGE_BOOKMARKS" "$EDGE_OUTPUT" "Edge" || echo "Edge export skipped"
-
 echo ""
-
-# Export Safari bookmarks
 export_safari_bookmarks "$SAFARI_BOOKMARKS" "$SAFARI_OUTPUT" || echo "Safari export skipped"
-
 echo ""
-echo "Files saved to: $ONEDRIVE_PATH"
+# echo "Files saved to: $ONEDRIVE_PATH"
